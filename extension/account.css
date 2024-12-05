@@ -1,0 +1,217 @@
+/* General body styling for the Account Management page */
+body {
+    font-family: 'Press Start 2P', cursive;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 10px;
+    color: #333;
+}
+
+/* Header styling */
+h2 {
+    text-align: center;
+    font-family: 'Cinzel', serif; /* Roman-inspired font */
+    color: #333;
+    font-size: 22px;  /* Increase font size */
+    font-weight: bold;
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+
+/* Section titles */
+h3 {
+    font-family: 'Press Start 2P', cursive;
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* Styling for buttons */
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff; /* Same color as in the extension */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 12px;
+}
+
+/* Button hover effect */
+button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Styling for input fields */
+input {
+    width: 100%;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    margin: 10px 0;
+}
+
+/* Styling for section divs to match content box appearance */
+.section-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Account info and payment info sections */
+.account-info, .payment-info {
+    margin-bottom: 20px;
+}
+
+/* Align account details */
+.account-details, .payment-details {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    color: #333;
+}
+
+/* Divider line between sections */
+hr {
+    border: 1px solid #ddd;
+    margin: 20px 0;
+}
+
+/* Spacing and layout for the change/update buttons */
+.change-btn, .update-btn {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* Hover effect for the buttons */
+.change-btn:hover, .update-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Adjust font size for smaller text areas */
+small {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 10px;
+    color: #666;
+}
+
+/* Styling for "Scribe of" */
+#scribe-of {
+    font-family: 'Cinzel', serif; 
+    font-size: 18px;
+    font-weight: normal; 
+    color: #333; 
+    text-align: center;
+    letter-spacing: 10px; 
+    display: block;
+    margin: 0;  
+    padding: 0; 
+    line-height: 1.1; 
+    margin-bottom: 0px; 
+    text-transform: uppercase; 
+}
+
+/* Styling for "ΛLΞXΛNDRIΛ" */
+#alexandria {
+    font-family: 'Helvetica Neue', Arial, sans-serif; 
+    font-size: 26px;  
+    font-weight: 200; 
+    color: #333; 
+    text-align: center;
+    letter-spacing: 5px; 
+    text-transform: uppercase; 
+}
+
+
+/* Container for the two halves */
+#account-page {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Left and right containers for Account and Payment info */
+#account-details, #payment-method {
+    flex: 1;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#logout-btn {
+    width: 75%;
+    padding: 12px;
+    background-color: #dc3545; 
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 12px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Add margin to the payment method text to create space */
+#payment-method p {
+    margin-bottom: 20px; /* Add space below the payment method info */
+}
+
+/* Push button down by using flexbox */
+#payment-method {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Ensures the button stays at the bottom */
+    height: 100%;
+}
+
+#payment-method button {
+    margin-top: auto; /* Push the button to the bottom */
+}
+
+/* Account information container */
+#account-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+/* For both containers, make sure the buttons are pushed to the bottom */
+#account-details button,
+#payment-method button {
+    margin-top: auto;
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 12px;
+}
+

@@ -128,3 +128,14 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+.DS_Store
+extension/.DS_Store
+extension/db-dexie.js
+extension/scripts/dexie.min.js
+extension/db.js
+extension/manifest-v2.json
+extension/icon-v09.png
+extension/styles copy.css
+extension.pem
+extension.crx

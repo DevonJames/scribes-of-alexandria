@@ -1,114 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Scribes of ΛLΞXΛNDRIΛ</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Press+Start+2P&display=swap&family=Poppins:wght@200&display=swap" rel="stylesheet">
-    <!-- <script src="jetzt.js"></script> -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Press+Start+2P&family=Poppins:wght@200&family=VT323&display=swap"
+        rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="popup-container">
-        <!-- <h2 class="app-title">
-            <span class="scribe-of">Scribes of</span> 
-            <span class="alexandria">ΛLΞXΛNDRIΛ</span>
-        </h2> -->
-        
-        <!-- Loading Backdrop (Optional) -->
-        <div id="loading-backdrop" class="hidden"></div>
 
-        <!-- Loading Indicator -->
-        <div id="loading-indicator" class="hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="50" height="50">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 22C6.477 22 2 17.523 2 12C2 6.477 6.477 2 12 2C17.523 2 22 6.477 22 12C22 17.523 17.523 22 12 22ZM10 12L7 9L7 7L17 7L17 9L14 12L17 15L17 17L7 17L7 15L10 12ZM9 9L12 12L15 9L9 9ZM15 15L9 15L12 12L15 15Z" fill="black"/>
-            </svg>
+        <!-- Registration/Login Screen -->
+        <div id="auth-container" class="auth-container">
+            <!-- Registration Form -->
+            <div id="registration-form">
+                <h1>Register</h1>
+                <input type="text" id="register-email" placeholder="Email" required><br>
+                <input type="password" id="register-password" placeholder="Password" required><br>
+                <input type="password" id="register-confirm-password" placeholder="Confirm Password" required><br>
+                <button id="register-btn">Register</button>
+                <p id="register-error" class="error-message"></p>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form" class="hidden">
+                <h1>Login</h1>
+                <input type="text" id="login-email" placeholder="Email" required><br>
+                <input type="password" id="login-password" placeholder="Password" required><br>
+                <div class="spacer"></div>
+                <button id="login-btn">Login</button>
+                <p id="login-error" class="error-message"></p>
+            </div>
+
+            <p><a href="#" id="toggle-auth">Already have an account? Log in here.</a></p>
+            <div class="spacer"></div>
         </div>
 
-        <!-- Tabs -->
-        <div class="tab">
-            <button class="tablinks" id="defaultOpen">Article</button>
-            <button class="tablinks">Related</button>
-            <button class="tablinks">Settings</button>
-        </div>
+        <div id="main-content" class="hidden">
+            <!-- <div id="loading-backdrop" class="hidden"></div> -->
+            <!-- Loading Indicator -->
+            <div id="loading-indicator" class="hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" width="50" height="50">
+                    <path fill-rule="evenodd" clip-rule="evenodd"
+                        d="M12 22C6.477 22 2 17.523 2 12C2 6.477 6.477 2 12 2C17.523 2 22 6.477 22 12C22 17.523 17.523 22 12 22ZM10 12L7 9L7 7L17 7L17 9L14 12L17 15L17 17L7 17L7 15L10 12ZM9 9L12 12L15 9L9 9ZM15 15L9 15L12 12L15 15Z"
+                        fill="black" />
+                </svg>
+            </div>
+            <!-- Tabs -->
+            <div class="tab">
+                <button class="tablinks" data-tab="Article">Article</button>
+                <button class="tablinks" data-tab="Related">Related</button>
+                <button class="tablinks" data-tab="Saved">Saved</button>
+            </div>
+            <button id="settings-btn" class="gear-button">
+                <img src="gear-icon.svg" alt="Settings" />
+            </button>
 
-        <!-- Article Tab -->
-        <div id="Article" class="tabcontent">
-            <!-- Headline (can expand up to 3 lines) -->
-            <input type="text" id="headline" placeholder="Article headline" readonly><br>        
-            
-            <!-- Description -->
-            <textarea id="description" placeholder="Short article description"></textarea><br>
-            
-            <div class="hidden">
-                <!-- Date and Byline (side by side using flexbox) -->
+            <!-- Article Tab -->
+            <div id="Article" class="tabcontent">
+                <input type="text" id="domain" readonly><br>
                 <div class="flex-container">
                     <input type="text" id="byline" placeholder="Author">
                     <input type="text" id="publish-date" placeholder="Publish Date">
                 </div>
-            <!-- Tags -->
-            
-            <!-- URL -->
-            
-            <!-- Article Content -->
-            <textarea id="content" rows="2" placeholder="Article content"></textarea><br>
-            <button id="toggle-content-btn">Expand</button>
-            <input type="text" id="url" placeholder="URL" readonly><br>
-            
-            <input type="text" id="tags" placeholder="Comma-separated tags"><br>
-        </div>
-        <input type="text" id="domain" placeholder="Domain" readonly><br>
-        <!-- Save Article Button -->
-            <!-- <button id="save-article-btn">Save Article</button> -->
-        </div>
+                <!-- Headline (can expand up to 3 lines) -->
+                <textarea id="headline" placeholder="Article headline" readonly></textarea>
+                <!-- Article Content -->
+                <textarea id="content" placeholder="Article content"></textarea>
+                <div class="links">
+                    <a id="read-article-link" href="#" target="_blank" class="inactive-link">Read Article</a> |
+                    <a id="metadata-link" href="#" target="_blank" class="inactive-link">View Record</a> |
+                    <a id="blockchain-link" href="#" target="_blank" class="inactive-link">Permaweb Data</a>
+                </div>
+                <div class="hidden">
+                    <!-- Description -->
+                    <textarea id="description" placeholder="Short article description"></textarea><br>
+                    <!-- Tags -->
+                    <input type="text" id="tags" placeholder="Comma-separated tags"><br>
+                    
+                    <button id="toggle-content-btn">Expand</button>
+                
+                    <!-- URL -->
+                    <input type="text" id="url" placeholder="URL" readonly><br>
+                </div>
+            </div>
+            <!-- Related Tab -->
+            <div id="Related" class="tabcontent">
+                <div id="related-articles-container" style="overflow-y: auto;">
+                    <h4>Article Title</h4>
+                    <p>Summary of the article...</p>
+                    <small>Published on: Date</small>
+                    <a href="#">Read it</a>
+                    <!-- <h3>Related Articles</h3> -->
+                    <!-- <div id="related-articles-container"> -->
+                    <!-- Related articles go here -->
+                </div>
+                <!-- <button id="summarize-selected-btn">Summarize Selected Articles</button> -->
 
-        <!-- Related Tab -->
-        <div id="Related" class="tabcontent">
-            <h3>Related Articles</h3>
-            <p>No related articles yet.</p>
-        </div>
 
-        <!-- Sticky Bottom Buttons -->
-        <div class="sticky-button-row">
-            <!-- <button id="archive-btn">Archive This</button> -->
-            <button id="brief-btn">Brief Me</button>
-        </div>
+                <!-- <p>No related articles yet.</p> -->
+                 </div>
+            
+            <!-- Reading Container for Brief Me functionality -->
+            <!-- <div class="dim-background"></div> -->
+            <!-- <div class="reading-container" id="reading-container"> -->
+                <!-- <canvas id="audio-visualizer" width="300" height="300"></canvas> -->
+                <!-- button for closeVisualizer -->
+                <!-- <button id="close-visualizer-btn">Close</button> -->
+                <!-- <audio id="audio-player" controls></audio> -->
 
-        <!-- Reading Container for Brief Me functionality -->
-        <div class="dim-background"></div>
-        <div class="reading-container" id="reading-container">
-            <div id="text-content">Content being read...</div>
-            <button id="pause-btn" style="display: none;">Pause</button>
-            <button id="resume-btn" style="display: none;">Resume</button>
-            <div class="progress-bar">
-                <div class="progress-bar-inner" id="progress-bar"></div>
+                <!-- DISABLED FOR FIRST RELEASE - DO NOT DELETE -->
+                <!-- </div> -->
+                <!-- Audio Player for Brief Me functionality -->
+                <!-- Speed Slider for controlling the reading speed -->
+                <!-- <label for="speed-slider">Speed (WPM):</label> -->
+                <!-- <input type="range" id="speed-slider" min="100" max="600" value="350" step="10"> -->
+                <!-- <span id="speed-value">370 WPM</span> Display the current WPM -->
+                <!-- <button id="pause-btn" style="display: none;">Pause</button>
+                <button id="resume-btn" style="display: none;">Resume</button>
+                <div class="progress-bar">
+                    <div class="progress-bar-inner" id="progress-bar"></div>
+                </div> -->
+            <!-- </div> -->
+
+            <!-- New History Tab -->
+            <div id="Saved" class="tabcontent">
+                <div id="related-articles-container" style="max-height: 400px; overflow-y: auto;">
+
+                <!-- <h3>Saved Articles</h3> -->
+                <div id="saved-list">
+                    <!-- Saved articles will be inserted here -->
+                </div>
+                </div> 
             </div>
         </div>
-        <!-- Settings Tab -->
-        <div id="Settings" class="tabcontent">
-            <h3>Preferences</h3>
-            <p>Briefing Options:</p>
-            <label><input type="checkbox" id="option-voice"> Voice </label><br>
-            <label><input type="checkbox" id="option-text"> Screen </label><br>
-            <p>LLM Model:</p>
-            // pull down menu of Options
-            <select id="llm-model">
-                <option value="llama2-plato">405B parameter LLaMA 2 Fine Tuned on Plato</option>
-                <option value="llama2-socrates">405B parameter LLaMA 2 Fine Tuned on Socrates</option>
-            </select>
+
+            
+            <!-- Sticky Bottom Buttons -->
+            <div class="sticky-button-row">
+                <button id="summarize-selected-btn">Summarize Articles</button>
+                <div class="button-group">
+
+                <button id="save-article-btn">Save</button>
+                <!-- <button id="brief-btn">
+                    Brief Me
+                    <audio id="audio-player" style="display: none;"></audio>
+                </button> -->
+                <button id="brief-btn" class="button-group">
+                    <span id="spinner" class="spinner hidden"></span> <!-- Spinner placeholder -->
+                    <span id="button-text">Brief Me</span> <!-- Text placeholder -->
+                    <audio id="audio-player" style="display: none;"></audio>
+                </button>
+                </div>
+            </div>
+
+
         </div>
-        
+
+        <!-- Settings Tab -->
+        <div id="Settings" class="hidden">
+            <!-- <p>Briefing Options:</p> -->
+            <!-- <select id="brief-choice">
+                <option value="Voice">Voice: such n such voice model</option>
+                <option value="Screen">Screen: speed reader</option>
+            </select> -->
+            <!-- <p>LLM Model:</p>
+            <select id="llm-model">
+                <option value="xAI">xAI (345M parameter)</option>
+                <option value="llama2-plato">LLaMa 2 Plato (405B parameter)</option>
+                <option value="llama2-socrates">LLaMa2 Socrates (405B parameter)</option>
+            </select> -->
+            <!-- <div class="sticky-button-row"> -->
+                <div class="settings-button-group">
+                    <button id="account-btn">Account</button>
+                    <button id="save-settings-btn">Save</button>
+                    <button id="logout-btn" class="hidden">Logout</button>
+                </div>  
+            <!-- </div> -->
+        </div>
+
     </div>
 
-<!-- Footer with title -->
-<footer class="footer">
-    <h2 class="app-title">
-        <span class="scribe-of">Scribes of</span> 
-        <span class="alexandria">ΛLΞXΛNDRIΛ</span>
-    </h2>
-</footer>
-
-    <!-- <button id="history-btn">History</button> -->
+    <!-- Footer with title -->
+    <footer class="footer">
+        <h2 class="app-title">
+            <span class="scribes-of">Scribes of</span>
+            <span class="alexandria">ΛLΞXΛNDRIΛ</span>
+        </h2>
+        <div id="log-container">
+            <canvas id="audio-visualizer" width="300" height="10"></canvas>
+            <div id="message-line" class="log-output"></div>
+            <button id="expand-btn" class="expand-button">⇔</button>
+        </div>
+    </footer>
 
     <script src="popup.js"></script>
 </body>
+
 </html>
