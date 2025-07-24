@@ -55,9 +55,9 @@
                 <button class="tablinks" data-tab="Related">Related</button>
                 <button class="tablinks" data-tab="Saved">Saved</button>
             </div>
-            <button id="settings-btn" class="gear-button">
+            <!-- <button id="settings-btn" class="gear-button">
                 <img src="gear-icon.svg" alt="Settings" />
-            </button>
+            </button> -->
 
             <!-- Article Tab -->
             <div id="Article" class="tabcontent">
@@ -69,22 +69,37 @@
                 <!-- Headline (can expand up to 3 lines) -->
                 <textarea id="headline" placeholder="Article headline" readonly></textarea>
                 <!-- Article Content -->
-                <textarea id="content" placeholder="Article content"></textarea>
-                <div class="links">
-                    <a id="read-article-link" href="#" target="_blank" class="inactive-link">Read Article</a> |
-                    <a id="metadata-link" href="#" target="_blank" class="inactive-link">View Record</a> |
-                    <a id="blockchain-link" href="#" target="_blank" class="inactive-link">Permaweb Data</a>
+                <!-- <div class="links">
+                    <a id="read-article-link" href="#" target="_blank" class="inactive-link">
+                        <img src="svgs/noun-read-7196061.svg" alt="Read Article" title="Read Article">
+                    </a>
+                    <a id="metadata-link" href="#" target="_blank" class="inactive-link">
+                        <img src="svgs/noun-bookmark-7196067.svg" alt="View Record" title="View Record">
+                    </a>
+                    <a id="blockchain-link" href="#" target="_blank" class="inactive-link">
+                        <img src="svgs/noun-verified-badge-7196252.svg" alt="Permaweb Data" title="Permaweb Data">
+                    </a>
+                </div> -->
+
+                
+                <div id="screenshot-container">
+                    <img id="screenshot" src="" alt="Screenshot">
                 </div>
+                <!-- <input type="text" id="tags" placeholder="Comma-separated tags"><br> -->
                 <div class="hidden">
+                    <textarea id="tags" placeholder="Comma-separated tags" readonly></textarea>
+                    <textarea id="description" placeholder="Short article description"></textarea>
+                    <textarea id="content" placeholder="Article content"></textarea>
+                    <br>
+                    <audio id="audio-player" style="display: none;"></audio>
                     <!-- Description -->
-                    <textarea id="description" placeholder="Short article description"></textarea><br>
                     <!-- Tags -->
-                    <input type="text" id="tags" placeholder="Comma-separated tags"><br>
                     
                     <button id="toggle-content-btn">Expand</button>
                 
                     <!-- URL -->
                     <input type="text" id="url" placeholder="URL" readonly><br>
+                    <input type="text" id="didTx" placeholder="DID TxID" readonly><br>
                 </div>
             </div>
             <!-- Related Tab -->
@@ -128,7 +143,7 @@
 
             <!-- New History Tab -->
             <div id="Saved" class="tabcontent">
-                <div id="related-articles-container" style="max-height: 400px; overflow-y: auto;">
+                <div id="saved-articles-container" style="max-height: 400px; overflow-y: auto;">
 
                 <!-- <h3>Saved Articles</h3> -->
                 <div id="saved-list">
@@ -136,51 +151,133 @@
                 </div>
                 </div> 
             </div>
+
+            
         </div>
 
             
             <!-- Sticky Bottom Buttons -->
             <div class="sticky-button-row">
-                <button id="summarize-selected-btn">Summarize Articles</button>
-                <div class="button-group">
-
-                <button id="save-article-btn">Save</button>
-                <!-- <button id="brief-btn">
-                    Brief Me
-                    <audio id="audio-player" style="display: none;"></audio>
-                </button> -->
-                <button id="brief-btn" class="button-group">
-                    <span id="spinner" class="spinner hidden"></span> <!-- Spinner placeholder -->
-                    <span id="button-text">Brief Me</span> <!-- Text placeholder -->
-                    <audio id="audio-player" style="display: none;"></audio>
+                <button id="summarize-selected-btn">
+                    <img src="noun-magic-podcast-7401756.svg" alt="Summarize Articles" title="Summarize Articles">
                 </button>
-                </div>
+                <button id="save-article-btn">
+                    <img src="svgs/noun-archive-7196118.svg" alt="Save" title="Save">
+                </button>
+                <button id="brief-btn">
+                    <img src="noun-play-6302389.svg" alt="Brief Me" title="Brief Me">
+                </button>
+                <button id="read-article-btn">
+                    <a id="read-article-link" href="#" target="_blank" class="inactive-link">
+                        <img src="svgs/noun-read-7196061.svg" alt="Read Article" title="Read Article">
+                    </a>
+                </button>
+                <button id="metadata-link-btn">
+                    <a id="metadata-link" href="#" target="_blank" class="inactive-link">
+                        <img src="svgs/noun-bookmark-7196067.svg" alt="View Record" title="View Record">
+                    </a>
+                </button>
+                <button id="blockchain-link-btn">
+                    <a id="blockchain-link" href="#" target="_blank" class="inactive-link">
+                        <img src="svgs/noun-verified-badge-7196252.svg" alt="Permaweb Data" title="Permaweb Data">
+                    </a>
+                </button>
+                <button id="settings-btn">
+                    <img src="svgs/noun-configure-7196220.svg" alt="Settings" />
+                </button>
             </div>
 
 
+
+
+        <div id="Settings" class="settings-container hidden">
+            <section class="settings-section">
+            <h3 class="settings-heading">Podcast Generator Settings</h3>
+            <div class="settings-row-horizontal">
+                <label for="llm-model" class="settings-label">LLM Model:</label>
+                <span class="info-icon" title="Select the language model to use for generating podcast content.">
+                <img src="svgs/noun-info-7408980.svg" alt="Info" style="width: 16px; height: 16px; filter: grayscale(100%);">
+                </span>
+                <select id="llm-model" class="settings-select">
+                <option value="grok">Grok by xAI</option>
+                <option value="gpt4" disabled>GPT-4 by OpenAI</option>
+                <option value="llama3_3" disabled>LLaMa3.3 (70B)</option>
+                </select>
+            </div>
+            
+        
+            <!-- <section class="settings-section"> -->
+            <h3>Hosts</h3>
+            <div class="bias-header">
+                <div class="bias-label woke-label">WOKE</div>
+                <div class="bias-label based-label">BASED</div>
+            </div>
+            <div class="settings-row-horizontal">
+                <label for="host1" class="settings-label">1:</label>
+                <select id="host1" class="settings-select half-width">
+                <option value="" disabled selected>Select</option>
+                <option value="socrates">Socrates</option>
+                <option value="thomasJefferson">Thomas Jefferson</option>
+                <option value="machiavelli">Niccolò Machiavelli</option>
+                <option value="hypatia">Hypatia of Alexandria</option>
+                <option value="leonardoDaVinci">Leonardo da Vinci</option>
+                <option value="tesla">Nikola Tesla</option>
+                <option value="cleopatra">Cleopatra</option>
+                <option value="marieCurie">Marie Curie</option>
+                <option value="sunTzu">Sun Tzu</option>
+                <option value="joanOfArc">Joan of Arc</option>
+                <option value="hercules">Hercules</option>
+                <option value="virginiaWoolf">Virginia Woolf</option>
+                <option value="adaLovelace">Ada Lovelace</option>
+                <option value="rumi">Rumi</option>
+                </select>
+            <!-- </div> -->
+                <div class="bias-container">
+                <label>
+                    <input type="radio" id="host1-woke" name="host1-personality" value="woke">
+                    <img src="svgs/noun-radio-button-1954458.svg" alt="Woke">
+                </label>
+                <label>
+                    <input type="radio" id="host1-based" name="host1-personality" value="based">
+                    <img src="svgs/noun-radio-button-1954457.svg" alt="Based">
+                </label>
+                </div>
+            </div>
+            <div class="settings-row-horizontal">
+                <label for="host2" class="settings-label">2:</label>
+                <select id="host2" class="settings-select half-width">
+                <option value="" disabled selected>Select</option>
+                <option value="socrates">Socrates</option>
+                <option value="thomasJefferson">Thomas Jefferson</option>
+                <option value="machiavelli">Niccolò Machiavelli</option>
+                <option value="hypatia">Hypatia of Alexandria</option>
+                </select>
+                <div class="bias-container">
+                <label>
+                    <input type="radio" id="host2-woke" name="host2-personality" value="woke">
+                    <img src="svgs/noun-radio-button-1954458.svg" alt="Woke">
+                </label>
+                <label>
+                    <input type="radio" id="host2-based" name="host2-personality" value="based">
+                    <img src="svgs/noun-radio-button-1954457.svg" alt="Based">
+                </label>
+                </div>
+            </div>
+            <p id="host-error" class="error-message"></p>
+            </section>
+
+        
+            <div class="settings-button-group">
+            <div class="button-pair">
+                <button id="account-btn" class="settings-button">Account</button>
+                <button id="logout-btn" class="settings-button">Logout</button>
+            </div>
+            <button id="save-settings-btn" class="settings-button close-button">
+                <img src="svgs/noun-close-button-4318169.svg" alt="Close" class="close-icon">
+            </button>
+            </div>
         </div>
 
-        <!-- Settings Tab -->
-        <div id="Settings" class="hidden">
-            <!-- <p>Briefing Options:</p> -->
-            <!-- <select id="brief-choice">
-                <option value="Voice">Voice: such n such voice model</option>
-                <option value="Screen">Screen: speed reader</option>
-            </select> -->
-            <!-- <p>LLM Model:</p>
-            <select id="llm-model">
-                <option value="xAI">xAI (345M parameter)</option>
-                <option value="llama2-plato">LLaMa 2 Plato (405B parameter)</option>
-                <option value="llama2-socrates">LLaMa2 Socrates (405B parameter)</option>
-            </select> -->
-            <!-- <div class="sticky-button-row"> -->
-                <div class="settings-button-group">
-                    <button id="account-btn">Account</button>
-                    <button id="save-settings-btn">Save</button>
-                    <button id="logout-btn" class="hidden">Logout</button>
-                </div>  
-            <!-- </div> -->
-        </div>
 
     </div>
 

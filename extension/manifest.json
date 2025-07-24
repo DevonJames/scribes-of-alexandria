@@ -6,9 +6,11 @@
         "activeTab",
         "scripting",
         "tabs",
-        "storage"
+        "storage",
+        "webRequest"
     ],
     "host_permissions": [
+        "http://localhost:3005/*",
         "http://api.oip.onl/*",
         "http://*/",
         "https://*/"
@@ -21,14 +23,21 @@
     },
     "web_accessible_resources": [
         {
-            "resources": ["dist/*.bundle.js"],
+            "resources": [
+                "icons/default-icon-96.png",
+                "icons/default-icon-150.png",
+                "icons/*.png",
+                "dist/*.bundle.js"
+            ],
             "matches": ["<all_urls>"]
         }
     ],
     "action": {
-        "default_popup": "popup.html",
         "default_title": "Scribes of Alexandria",
-        "default_icon": "icon.png"
+        "default_icon": {
+                    "96": "icons/default-icon-96.png",
+                    "150": "icons/default-icon-150.png"
+                }
     },
     "content_scripts": [
         {

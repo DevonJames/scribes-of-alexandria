@@ -71,31 +71,21 @@ heres my current css
 
 /* Styling for Headline */
 #headline {
-    /* width: 100%;
-    max-width: 100%; */
     padding: 12px;
     margin: 8px 0;
-    /* border: 1px solid #ddd; */
-    /* border-radius: 4px; */
     font-size: 14px;
     font-weight: bold;
     line-height: 1.0;
     white-space: normal !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
-        /* background-color: #f9f9f9; */
-    box-sizing: border-box; /* Ensure padding is included in width */
-    /* height: 80px; */
-    min-height: 44px;  /* Adjust height to fit 1-2 lines */
-    /* max-height: 180px;  Max height for 2 lines */
-    /* overflow-y: auto; Allow scrolling if content overflows */
-
-     overflow-y: hidden; /* Prevent scrolling */
-    /* white-space: normal; Keep text in a single line */
-    /* text-overflow: ellipsis; Add ellipsis (...) if overflow */
+    box-sizing: border-box; 
+    min-height: 44px; 
+    overflow-y: hidden; 
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
 }
 
@@ -141,23 +131,33 @@ input {
     margin: 0px 0;
     border: 0px solid #ddd;
     border-radius: 4px;
+    color: grey;
+    opacity: 0.5;
     /* background-color: #f9f9f9; */
-    background-color: #f0f0f0;
-    font-family: 'Press Start 2P', cursive !important;
+    /* background-color: #f0f0f0; */
+    /* font-family: 'Press Start 2P', cursive !important; */
     font-size: 9px;
     box-sizing: border-box;
+    background: transparent !important;
+}
+
+.tabcontent[data-tab="Article"] input {
+    /* color: #333; */
+    /* opacity: 1; */
+    white-space: normal; /* Allow text to wrap */
+    word-wrap: break-word; /* Break long words */
 }
 
 /* Description and Content Areas */
 textarea {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #f9f9f9;
+    /* padding: 8px; */
+    border: 0px solid #ddd;
+    /* border-radius: 4px; */
+    /* background-color: #f9f9f9; */
     resize: none;
     box-sizing: border-box;
-    /* overflow-y: auto; */
+    overflow-y: none;
 }
 
 
@@ -219,9 +219,10 @@ h2::after {
     align-items: center;
     width: 370px;
     /* max-width: 800px; */
+    padding: 0px;
     margin: 0 auto;
-    /* height: auto; */
-    height: 480px;
+    height: auto;
+    max-height: 480px;
     margin-bottom: 30px;
     box-sizing: border-box;
 }
@@ -264,11 +265,12 @@ h2::after {
 /* Tab Content */
 .tabcontent {
     width: 350px;
-    height: 440px;
+    height: 380px;
     display: none; /* Hide all content by default */
     padding: 10px;
-    padding-top: 0px;  
-    padding-bottom: 0px; 
+    margin: 0;
+    /* padding-top: 0px;   */
+    /* padding-bottom: 0px;  */
     background-color: #f0f0f0;  /* Light grey background for the content */
 
     border-radius: 4px;  /* Soft corners */
@@ -365,7 +367,7 @@ button {
     gap: 5px;  /* Add space between the checkbox and content */
     margin: 5px 0;  /* Add margin between articles */
     padding: 8px;
-    padding-top 0 !important;
+    padding-top: 0 !important;
     margin-top: 0 !important;
     border: 1px solid #ccc;  /* Add a border for better separation */
     border-radius: 4px;
@@ -379,10 +381,10 @@ button {
     padding: 10px;
     margin: 8px 0;
     margin-bottom: 5px;
-    background-color: #333;
     color: white;
     border: none;
     border-radius: 5px;
+    background-color: #333;
     font-family: 'Press Start 2P', cursive;
     font-size: 12px;
     cursor: pointer;
@@ -392,13 +394,72 @@ button {
     background-color: #999;
     cursor: not-allowed;
 }
+
 #saved-list, #related-articles-container {
-    max-height: 350px; /* Set to fit within the popup */
+    max-height: 430px !important; /* Set to fit within the popup */
     overflow-y: auto; /* Enable vertical scrolling */
     overflow-x: hidden; /* Hide horizontal scrollbar */
     display: block; /* Ensure it’s visible */
     padding: 0 !important; /* Remove any extra padding */
     margin: 0 !important; /* Remove any extra margin */
+}
+
+#screenshot-container {
+    /* display: flex; */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; /* Ensures tags input aligns below the image */
+    width: 100%;
+    height: 350px;
+    /* padding: 10px; */
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow-x: auto; /* Enable vertical scrolling for content that exceeds the height */
+}
+
+#screenshot {
+    max-width: 100%;
+    height: auto;
+    /* border-radius: 4px; */
+    /* border: 1px solid #ddd; Add a subtle border around the screenshot for better definition */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Add a slight shadow to make the screenshot pop */
+}
+
+.play-audio-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    margin-left: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.play-audio-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+#tags {
+    /* width: calc(100% - 20px); Adjust input width to match the container padding */
+    margin-top: 4px; 
+    /* padding: 8px; */
+    /* font-size: 14px; */
+    /* background-color: #333; */
+    font-family: 'Press Start 2P', cursive;
+    font-size: 11px;
+    color: #888;
+    background: transparent;
+    opacity: 0.5;
+    /* border: 1px solid #ccc; */
+    /* border-radius: 4px; */
+    /* box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); Inner shadow for a subtle inset effect */
+    white-space: normal; /* Allow text to wrap */
+    word-wrap: break-word; /* Break long words */
+    height: 5.5em; /* Make it 3 lines tall */
+    resize: none; /* Prevent resizing */
+    overflow: hidden;
 }
 
 /* Styling for the article title */
@@ -464,6 +525,15 @@ button {
     flex: 1;  /* Take up the remaining space */
     display: flex;
     flex-direction: column;
+    /* align-items: center; Align the date and buttons vertically */
+}
+
+.related-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    /* align-items: center; */
+    gap: 8px;
 }
 
 .checkbox-label {
@@ -479,35 +549,60 @@ button {
     font-weight: bold;
 }
 
+/* Related Tab Buttons */
 .related-content .links {
     display: flex;
-    gap: 5px; /* Adjust spacing between links as needed */
-    /* font-size: 10px; Optional: adjust font size */
-    flex-wrap: wrap; /* Allows links to wrap if needed on smaller screens */
+    justify-content: flex-end; /* Aligns the buttons to the right */
+    /* justify-content: space-around; */
+    gap: 8px;
+    margin: 0px;
+}
+
+.related-content a {
+    font-family: 'VT323', monospace;
+    font-size: 12px;
+    text-decoration: none;
+    color: #49729e;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.related-content a:hover {
+    background-color: #49729e;
+    color: white;
+}
+
+.related-content a:active {
+    transform: scale(0.95);
 }
 
 
 .links {
-    padding-bottom: 10px;
-    /* padding-top: 10px; */
-    text-align: center;
-    
-    /* position:absolute; */
-    /* left: 0; */
-    /* right: 10; */
-    /* top: 420px;  */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 8px;
 }
-.links a {
-    /* font-family: 'Press Start 2P', cursive; */
-    font-size: 21px;
-    text-decoration: underline;
-    color: #49729e; 
-    /* center justify the text */
-    font-family: 'VT323', monospace;
-    /* color: whitesmoke; Green for CRT look */
-    /* color: #0f470f; Dark green for CRT look */
-    /* text-shadow: 0 0 5px rgba(51, 255, 51, 0.5); Soft glow effect */
 
+.links a {
+    font-family: 'VT323', monospace;
+    font-size: 12px;
+    text-decoration: none;
+    color: #49729e;
+    padding: 0px 0px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.links a:hover {
+    background-color: #49729e;
+    color: white;
+}
+.links a:active {
+    transform: scale(0.95); /* Click effect */
 }
 
 .links .inactive-link {
@@ -517,6 +612,10 @@ button {
     text-decoration: none;
 }
 
+.related-content small {
+    flex-grow: 1;
+    margin: 0; /* Remove any default margin around the date */
+}
 
 .related-content .links a {
     text-decoration: underline;
@@ -562,6 +661,12 @@ button {
     margin: 20px 0;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);  /* Soft shadow for depth */
   }
+
+button[disabled], button[disabled]:hover {
+    background-color: #999;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
 
   /* button {
     background-color: #4285F4;
@@ -678,48 +783,46 @@ button {
     z-index: 0;
     position:absolute;
     right: 10px;
-    top: 0px; /* Make space for the footer */
+    top: -2px; /* Make space for the footer */
     text-align: right;
     /* text-align: left; */
     font-family: 'VT323', monospace;
     color: whitesmoke; /* Green for CRT look */
     text-shadow: 0 0 5px rgba(51, 177, 255, 0.5); /* Soft glow effect */
-    font-size: 10px;
+    font-size: 13px;
     /* height: 50px; Adjust this to allow three lines */
     height: 20px;
     /* line-height: 1.2em; Line height for multi-line content */
     line-height: 20px;
     overflow: hidden; /* In case content exceeds 3 lines */
-    opacity: 0.8; /* Slight transparency */
-    width: 33%;
+    opacity: 0.6; /* Slight transparency */
+    width: 70%;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
 /* Fixed Bottom Button Row */
 .sticky-button-row {
-    /* position: relative; */
-    position:absolute;
-    left: 0;
-    right: 0;
-    bottom: 10px; /* Make space for the footer */
-    width: 100%;
-    max-width: 400px;
-    padding: 0px 10px;
-    box-sizing: border-box;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    /* justify-content: space-between; */
-    /* background-color: white; */
-    z-index: 20; /* Ensure it stays on top */
+    justify-content: center;
     align-items: center;
-    /* padding-right: 40px;  */
+    padding: 5px 10px; /* Adjust padding for the row */
+    gap: 6px; /* Adjust spacing between buttons */
+    position: fixed;
+    bottom: 20px;
+    width: calc(100% - 20px);
+    max-width: 400px;
+    background: #f9f9f9; /* Light background color */
+    padding: 6px 10px; /* Reduce padding to make row shorter */
+    border-top: 1px solid #ccc; /* Subtle top border */
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1); /* Slight shadow for separation */
+    z-index: 20; /* Ensure it stays on top */
+    border-radius: 8px; /* Slight rounding for a cleaner look */
 }
 
 .settings-button-group {
         /* position: relative; */
-        position:absolute;
+        /* position:absolute; */
         left: 0;
         right: 0;
         bottom: 60px; /* Make space for the footer */
@@ -741,8 +844,8 @@ button {
 #summarize-selected-btn {
     width: 342px;
     padding: 10px4px;
-    background-color: #333;
-    color: white;
+    /* background-color: #333; */
+    /* color: white; */
     border: none;
     border-radius: 5px;
     font-family: 'Press Start 2P', cursive;
@@ -750,46 +853,107 @@ button {
     cursor: pointer;
 }
 
+.links img, .sticky-button-row img {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    cursor: pointer;
+    margin: 0;
+}
 
-/* Archive and Brief Me Buttons */
+button img {
+    display: block;
+    margin: 0 auto;
+}
+
+
+/* Buttons in the Sticky Row */
 .sticky-button-row button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px; /* Adjust padding to make buttons shorter */
+    background-color: white; /* Set to white or desired light color */
+    border: 1px solid #ccc; /* Add a light border for visibility */
+    color: #333; /* Dark text for contrast */
+    border-radius: 5px; /* Soft corners */
+    font-family: 'Press Start 2P', cursive; /* Optional font */
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Add hover effect */
+.sticky-button-row button:hover {
+    background-color: #f9f9f9; /* Slightly darker shade on hover */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow on hover */
+}
+
+/* Active/Clicked effect */
+.sticky-button-row button:active {
+    background-color: #e6e6e6; /* Even darker shade when clicked */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* Inset shadow for clicked effect */
+}
+/* Archive and Brief Me Buttons */
+/* .sticky-button-row button {
     flex: 1;
     cursor: pointer;
     padding: 10px;
-    /* background-color: black; */
     color: white;
     border: none;
     border-radius: 5px;
     font-family: 'Press Start 2P', cursive;
     font-size: 14px;
-    margin: 4px;  /* Add a bit more space between them */
-    padding: 10px;  /* Ensure consistent padding */
+    margin: 4px;  
+    padding: 10px;  
+} */
+
+.button-group button:hover {
+    background-color: #f9f9f9; /* Slightly darker background on hover */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+}
+
+/* Clicked/active effect for button-group buttons */
+.button-group button:active {
+    background-color: #e6e6e6; /* Darker shade on click */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* Inset shadow for clicked effect */
 }
 
 /* Container for Save and Brief Me Buttons */
-.button-group {
+/* .button-group {
     display: flex;
-    width: 100%;
     justify-content: space-between;
+    padding: 4px 8px; /* Adjust padding inside the row */
+    gap: 6px; /* Adjust spacing between buttons */
+} */
+
+/* Shorten the buttons */
+.button-group button img {
+    width: 20px; /* Adjust icon size */
+    height: 20px;
+    margin: 0; /* Remove extra margins */
 }
 
 .button-group button {
-    flex: 1;
-    padding: 10px;
-    background-color: #333;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px; /* Shorten padding */
+    background-color: white; /* Ensure background is light */
+    border: 1px solid #ccc; /* Add a light border */
+    color: #333; /* Dark text for contrast */
+    border-radius: 5px; /* Rounded corners */
+    font-family: 'Press Start 2P', cursive; /* Ensure consistent font */
+    font-size: 14px; /* Adjust font size */
     cursor: pointer;
-    margin: 0 4px; /* Small space between buttons */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-#brief-btn, #save-article-btn {
+
+/* #brief-btn, #save-article-btn {
     background-color: #333;
     position: relative;
-}
+} */
 
 /* #brief-btn, #save-article-btn button:hover {
     background-color: #0056b3;
@@ -803,7 +967,7 @@ button {
     overflow: hidden;   
     width: 100%;
     padding: 10px;
-    background-color: #333;
+    /* background-color: #333; */
     color: white;
     border: none;
     border-radius: 5px;
@@ -841,13 +1005,13 @@ button {
     /* background-color: rgba(0, 0, 0, 0.1); Light background to see if it's visible */
     position: absolute;       /* Position it over the button */
     /* top: 50%; */
-    top: -4px;
-    right: 154px;
+    top: -15px;
+    right: 112px;
     /* transform: translate(-50%, -50%); */
     /* transform: translateX(-50%); */
     pointer-events: none;     /* Allow clicks to pass through to the button */
-    width: 30%;              /* Match the button width */
-    height: 40%;             /* Match the button height */
+    width: 44%;              /* Match the button width */
+    height: 50%;             /* Match the button height */
     /* opacity: 0.8;             Make it slightly transparent */
 }
 
@@ -902,34 +1066,39 @@ footer.expanded #audio-visualizer {
 
 /* Gear Button Specific Style */
 .gear-button {
-    position: absolute;
-    top: -10px;
-    right: 0px;
-    width: 16px;
-    height: 16px;
-    background: none;
+    /* position: fixed; */
+    /* top: 10px; */
+    /* right: 10px; */
+    font-size: 24px;
+    cursor: pointer;
+    /* position: absolute; */
+    /* top: -10px; */
+    /* right: 0px; */
+    /* width: 16px; */
+    /* height: 16px; */
+    /* background: none;
     border: none;
     padding: 0;
     margin: 0;
     cursor: pointer;
-    z-index: 21; /* Ensure it's above the footer */
+    z-index: 21;  */
 }
 
-.gear-button img {
+/* .gear-button img {
     position: absolute;
     top: 0px;
     right: 0px;
-    width: 16px;  /* Adjust size */
-    height: 16px;  /* Adjust size */
+    width: 16px;  
+    height: 16px;  
     display: block;
-}
+} */
 
 /* Optional Hover Effect for Gear Icon */
-.gear-button:hover img {
+/* .gear-button:hover img {
     filter: invert(1);
     background-color: #f0f0f0;
     border-radius: 12.5px; /* Round the corners */
-}
+/* } */ 
 
 
 /* Reading Container Popup */
@@ -1069,7 +1238,7 @@ footer .alexandria {
 }
 /* Headline and description full width */
 #headline,
-#content {
+#conten, #description {
     width: 100%;
     box-sizing: border-box;
     padding: 2px;
@@ -1079,27 +1248,27 @@ footer .alexandria {
     background-color: #f0f0f0;
 }
 
-#content {
-    width: 100%;
+#content, #description {
+    /* width: 100%; */
     /* height: auto; */
     /* height: 300px; */
-    padding: 2px;
+    /* padding: 2px; */
     padding-bottom: 0px;
     padding-left: 2px;
     padding-right: 2px;
-    margin-left: 2px;
-    margin-right: 2px;
+    /* margin-left: 2px; */
+    /* margin-right: 2px; */
     /* border: 1px solid #ddd; */
     border-radius: 4px;
     /* background-color: #f9f9f9; */
-    box-sizing: border-box; /* Ensurdescriptione padding is included in width */
-    min-height: 267px; 
+    /* box-sizing: border-box;  */
+    min-height: 344px; 
     /* max-height: 320px;  */
     /* overflow-y: auto; Allow scrolling if content overflows
      */
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 17;
+    -webkit-line-clamp: 22;
     -webkit-box-orient: vertical;
 }
 
@@ -1233,3 +1402,577 @@ audio::-webkit-media-controls-mute-button:hover {
     padding: 2px 4px;
     border-radius: 4px;
 }
+
+
+
+/* General Container Styling */
+/* .settings-container {
+    font-family: 'Arial', sans-serif;
+    max-width: 500px;
+    margin: 20px auto;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px 25px;
+    color: #333;
+} */
+
+/* Section Headings */
+.settings-heading {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #444;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 5px;
+}
+
+/* Dropdowns and Radio Buttons Row */
+.settings-row-horizontal {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.settings-select.half-width {
+    flex: 0 0 50%;
+    padding: 7px 4px;
+    font-size: 11px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #333;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.settings-select.half-width:focus {
+    border-color: #0078D4;
+    box-shadow: 0 0 4px rgba(0, 120, 212, 0.3);
+}
+
+/* Inline Radio Buttons */
+.personality-options-inline {
+    display: flex;
+    gap: 15px;
+}
+
+.personality-options-inline label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+.personality-options-inline input[type="radio"] {
+    accent-color: #0078D4;
+    cursor: pointer;
+}
+
+/* Button Group */
+.settings-button-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.button-pair {
+    display: flex;
+    gap: 10px;
+}
+
+/* .settings-button {
+    background: #e0e0e0;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.settings-button:hover {
+    background: #d0d0d0;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.close-icon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s;
+}
+
+.close-button:hover .close-icon {
+    transform: rotate(90deg);
+} */
+
+#close-settings-btn.settings-button.close-button {
+    position: absolute;
+    top: 10px;
+    width: 20px;
+    right: 10px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+/* Buttons: Light Grey with Subtle Hover */
+.settings-button {
+    background: #f0f0f0; /* Light grey background */
+    color: #333; /* Darker grey text */
+    border: 1px solid #d1d1d1; /* Subtle grey border */
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.settings-button:hover {
+    background: #e0e0e0; /* Slightly darker grey on hover */
+    border-color: #c0c0c0;
+}
+
+/* .close-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+} */
+
+.close-icon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s;
+    opacity: 0.8;
+}
+
+.close-button:hover .close-icon {
+    transform: rotate(90deg);
+    opacity: 1;
+}
+
+/* Error Message */
+.error-message {
+    color: #d9534f;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Settings Container */
+.settings-container {
+    position: relative;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    margin: auto;
+    font-family: 'Courier New', Courier, monospace;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Close Button - Top Right */
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+.close-btn img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Section Headings */
+.settings-container h3 {
+    margin-bottom: 0.5rem;
+    border-bottom: none; /* Remove any default bottom border */
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Settings Row */
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Host Dropdown & Radio Container */
+.host-container,
+.radio-container {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.radio-container label {
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+/* Dropdown Menu Styling */
+select {
+    width: 90%;
+    padding: 5px;
+    font-size: 14px;
+    font-family: 'Courier New', Courier, monospace;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+}
+select:focus {
+    outline: none;
+    border-color: #888;
+}
+
+/* Dropdown Open Styling */
+select option {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+}
+
+/* Button Group */
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.hollow-btn {
+    border: 1px solid #aaa;
+    background: transparent;
+    color: #333;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.hollow-btn:hover {
+    background: #e0e0e0;
+    border-color: #888;
+    color: #000;
+}
+
+.settings-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+}
+
+
+
+
+.bias-label {
+    font-size: 0.8rem;
+    text-align: center;
+    flex: 1;
+}
+
+
+.bias-container label {
+    cursor: pointer;
+}
+
+.bias-container input[type="radio"] {
+    display: none; /* Hide the native radio button */
+}
+
+.bias-container img {
+    width: 20px;
+    height: 20px;
+    filter: grayscale(100%);
+    transition: opacity 0.2s ease-in-out;
+}
+
+.bias-container input[type="radio"]:checked + img {
+    filter: none; /* Show the active state */
+    opacity: 1;
+}
+
+.settings-select {
+    font-family: "Courier New", Courier, monospace; /* Match font */
+    font-size: 14px;
+    width: 50%;
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f7f7f7;
+    color: #333;
+}
+
+/* Align the select dropdowns and bias section */
+.settings-row-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.settings-label {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    width: 40px;
+}
+
+/* Buttons and layout */
+.settings-button-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.button-pair {
+    display: flex;
+    gap: 10px;
+}
+
+.settings-button {
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #333;
+    border: 1px solid #aaa;
+    background-color: transparent;
+    text-transform: uppercase;
+    font-family: "Courier New", Courier, monospace;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.settings-button:hover {
+    background-color: #e0e0e0;
+    color: #000;
+}
+
+.close-button img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+}
+
+
+/* Bias header alignment */
+.bias-header {
+    display: flex;
+    justify-content: flex-end;
+    gap: 31px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+    text-transform: uppercase;
+}
+
+.bias-label {
+    font-size: 0.8rem;
+    text-align: center;
+    flex: 1;
+}
+
+.bias-label.woke-label {
+    margin-left: 172px;
+    font-size: 0.8rem;
+    text-align: right;
+    /* align-items: right; */
+    /* flex: 1; */
+}
+
+.bias-label.based-label {
+    font-size: 0.8rem;
+    text-align: right;
+    /* align-items: right; */
+    /* flex: 1; */
+}
+
+/* Bias container for radio buttons */
+.bias-container {
+    display: flex;
+    justify-content: space-between;
+    /* align-items: center; */
+    gap: 47px;
+    /* flex: 1; */
+    /* max-width: 100px; */
+    margin-left: 16px;
+}
+
+.bias-container label {
+    cursor: pointer;
+}
+
+.bias-container input[type="radio"] {
+    display: none; /* Hide the native radio button */
+}
+
+.bias-container img {
+    width: 20px;
+    height: 20px;
+    filter: grayscale(100%);
+    transition: opacity 0.2s ease-in-out;
+}
+
+.bias-container input[type="radio"]:checked + img {
+    filter: none; /* Show the active state */
+    opacity: 1;
+}
+
+.settings-select {
+    font-family: "Courier New", Courier, monospace; /* Match font */
+    font-size: 14px;
+    width: 50%;
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f7f7f7;
+    color: #333;
+}
+
+/* Align the select dropdowns and bias section */
+.settings-row-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.settings-label {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    width: 40px;
+}
+
+/* Buttons and layout */
+.settings-button-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.button-pair {
+    display: flex;
+    gap: 10px;
+}
+
+.settings-button {
+    padding: 6px 12px;
+    font-size: 14px;
+    color: #333;
+    border: 1px solid #aaa;
+    background-color: transparent;
+    text-transform: uppercase;
+    font-family: "Courier New", Courier, monospace;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.settings-button:hover {
+    background-color: #e0e0e0;
+    color: #000;
+}
+
+.close-button img {
+    width: 20px;
+    height: 20px;
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+}
+
+
+
+/* Remove line under Hosts */
+h3 {
+    margin-bottom: 0.5rem;
+    border-bottom: none; /* Remove any default bottom border */
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Bias header alignment */
+.bias-header {
+    display: flex;
+    justify-content: space-around; /* Distribute Woke and Based evenly */
+    margin: 0 70px; /* Space to align properly */
+    font-weight: bold;
+    color: #333;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+/* Align bias options container */
+.bias-container {
+    /* display: flex; */
+    /* justify-content: space-between; */
+    align-items: center;
+    /* width: 100px; Ensure equal spacing for radio buttons */
+    margin-left: 20px;
+}
+
+/* Remove the input's visual effect and align SVGs */
+.bias-container input[type="radio"] {
+    display: none; /* Hide native radio buttons */
+}
+
+.bias-container img {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    filter: grayscale(100%); /* Inactive state */
+    transition: filter 0.2s ease;
+}
+
+.bias-container input[type="radio"]:checked + img {
+    filter: none; /* Active state (no grayscale) */
+}
+
+/* Settings row cleanup */
+.settings-row-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+/* Dropdowns */
+.settings-select {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 14px;
+    width: 50%;
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f7f7f7;
+    color: #333;
+}
+
+

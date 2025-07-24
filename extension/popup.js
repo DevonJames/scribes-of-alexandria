@@ -1,7 +1,15 @@
 // const backendURL = 'http://localhost:3005';
 const backendURL = 'https://api.oip.onl';
 
-const port = chrome.runtime.connect({ name: "popupConnection" });
+function reconnectPort() {
+    console.log("Reconnecting port...");
+    return chrome.runtime.connect({ name: "popupConnection" });
+}
+let port = chrome.runtime.connect({ name: "popupConnection" });
+// port.onDisconnect.addListener(() => {
+//     console.warn("Port disconnected.");
+//     port = reconnectPort(); // Automatically reopen the port
+// });
 const summarizeSelectedBtn = document.getElementById('summarize-selected-btn');
 const briefBtn = document.getElementById('brief-btn');
 const saveButton = document.getElementById('save-article-btn');
@@ -9,6 +17,7 @@ const audioPlayer = document.getElementById('audio-player');
 let articleSummaryAudioUrl = null; // For article summary audio
 let relatedSummaryAudioUrl = null; // For related articles summary audio
 let savedSummaryAudioUrl = null; // For saved articles summary audio
+let podcastUrl = null; // For podcast URL
 let isAudioPlaying = false;  // Track playback state
 let isRelatedTabActive = false;
 let isSavedTabActive = false;
@@ -44,14 +53,142 @@ expandBtn.addEventListener('click', () => {
 const spinner = document.getElementById('spinner');
 const buttonText = document.getElementById('button-text');
 
+document.addEventListener('DOMContentLoaded', () => {
+    // Retrieve the preloaded data
+    chrome.storage.local.get(['popupData', 'popupState'], function (result) {
+        const data = result.popupData;
+        const state = result.popupState;
+
+        console.log("Popup state:", state, "Data:", data);
+
+        if (state === 'error' && data) {
+            // Handle error state
+            displayError(data.error || 'An error occurred', data.url);
+            return;
+        }
+
+        if (state === 'main' && data) {
+            // Populate fields with the retrieved data
+            console.log("Populating popup with data:", data);
+
+            // Handle screenshot
+            const screenshotEl = document.getElementById('screenshot');
+            if (screenshotEl && data.screenshotURL) {
+                screenshotEl.src = data.screenshotURL;
+                screenshotEl.alt = 'Screenshot';
+            }
+
+            // Populate basic fields
+            const headlineEl = document.getElementById('headline');
+            if (headlineEl) headlineEl.value = data.title || '';
+
+            const bylineEl = document.getElementById('byline');
+            if (bylineEl) bylineEl.value = data.author || data.byline || '';
+
+            const contentEl = document.getElementById('content');
+            if (contentEl) contentEl.value = data.content || '';
+
+            const urlEl = document.getElementById('url');
+            if (urlEl) urlEl.value = data.url || '';
+
+            // Extract domain from URL
+            const domainEl = document.getElementById('domain');
+            if (domainEl && data.url) {
+                try {
+                    const domain = new URL(data.url).hostname.replace('www.', '');
+                    domainEl.value = domain;
+                } catch (e) {
+                    domainEl.value = '';
+                }
+            }
+
+            // Convert and display the publish date
+            const publishDateEl = document.getElementById('publish-date');
+            if (publishDateEl && data.publishDate) {
+                const unixTimestamp = data.publishDate;
+                const date = new Date(unixTimestamp * 1000);
+                const humanReadableDate = date.toLocaleDateString('en-US', {
+                    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+                });
+                publishDateEl.value = humanReadableDate;
+            }
+
+            // Populate tags
+            const tagsEl = document.getElementById('tags');
+            if (tagsEl && data.tags) {
+                tagsEl.value = data.tags.join(', ');
+            }
+
+            // Update blockchain links
+            if (data.transactionId) {
+                const arweaveUrl = `https://arweave.net/${data.transactionId}`;
+                updateLink('blockchain-link', arweaveUrl);
+            }
+
+            if (data.didTx) {
+                const metadataUrl = `${backendURL}/api/records?resolveDepth=2&didTx=${data.didTx}`;
+                updateLink('metadata-link', metadataUrl);
+            }
+
+            if (data.url) {
+                updateLink('read-article-link', data.url);
+            }
+
+            // Show success message
+            if (data.message) {
+                displaySuccess(data.message, data.transactionId);
+            }
+
+            console.log("Popup populated successfully.");
+        } else if (state === 'login') {
+            // Show login interface (though not needed with new API)
+            displayLogin();
+        } else {
+            console.error("No data available or invalid popup state:", state);
+        }
+    });
+});
+
+// document.addEventListener('DOMContentLoaded', () => {
+//     // Retrieve the preloaded data
+//     chrome.storage.local.get(['popupData', 'popupState'], function (result) {
+//         const data = result.popupData;
+//         const state = result.popupState;
+
+//         if (state === 'main' && data) {
+//             // Populate fields with the retrieved data
+//             console.log("Populating popup with data:", data);
+
+//             document.getElementById('headline').value = data.title || '';
+//             document.getElementById('byline').value = data.byline || '';
+//             document.getElementById('content').value = data.content || '';
+//             document.getElementById('url').value = data.url || '';
+//             document.getElementById('domain').value = data.domain || '';
+
+//             const unixTimestamp = data.publishDate;
+//             const date = new Date(unixTimestamp * 1000); // Convert Unix timestamp to milliseconds
+//             const humanReadableDate = date.toLocaleDateString('en-US', {
+//                 weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+//             });
+//             document.getElementById('publish-date').value = humanReadableDate;
+
+//             document.getElementById('tags').value = (data.tags || []).join(', ');
+
+//             // Handle additional UI logic, e.g., updating links, enabling buttons, etc.
+//         } else {
+//             console.error("No data available or invalid popup state.");
+//         }
+//     });
+// });
+
 function setGeneratingState(isGenerating) {
     if (isGenerating) {
-        buttonText.textContent = "Working…";
-        spinner.classList.remove("hidden"); // Show spinner
+        // buttonText.textContent = "Working…";
+        // spinner.classList.remove("hidden"); // Show spinner
         briefBtn.style.pointerEvents = "none"; // Disable button to prevent multiple clicks
     } else {
-        buttonText.textContent = "Brief Me";
-        spinner.classList.add("hidden"); // Hide spinner
+        // buttonText.textContent = "Brief Me";
+        // spinner.classList.add("hidden"); // Hide spinner
         briefBtn.style.pointerEvents = "auto"; // Enable button
     }
 }
@@ -72,35 +209,77 @@ function getJwtToken(callback) {
     });
 }
 
-// Function to play/pause audio based on current state
-function playPauseAudio(url) {
-    const audioPlayer = document.getElementById('audio-player');
-    // Set the audio source if it's not already set to the desired URL
-    if (audioPlayer.src !== url) {
-        audioPlayer.src = url;
+function playPauseAudio(url, button) {
+    const audioPlayer = document.getElementById("audio-player");
+
+    if (!audioPlayer) {
+        console.error("Audio player element not found.");
+        return;
     }
 
-    // Toggle play/pause based on current state
+    // Set the audio source if it’s not already playing the requested file
+    if (audioPlayer.src !== url) {
+        audioPlayer.src = url;
+        isPlaying = false; // Reset playing state
+    }
+
     if (isPlaying) {
         audioPlayer.pause();
         isPlaying = false;
+        button.innerHTML = `<img src="svgs/noun-play-6302389.svg" alt="Play" style="width: 16px; height: 16px;">`;
     } else {
         audioPlayer.play()
             .then(() => {
                 isPlaying = true;
-                visualizeAudio(audioPlayer); // Activate visualizer if available
+                button.innerHTML = `<img src="svgs/noun-consistency-7196147.svg" alt="Pause" style="width: 16px; height: 16px;">`;
+                visualizeAudio(audioPlayer);
             })
-            .catch(error => console.error("Error playing audio:", error));
+            .catch((error) => {
+                console.error("Error playing audio:", error);
+                // alert("Unable to play audio. Please try again.");
+            });
     }
 }
 
+// // might turn this back on
+// function playPauseAudio(url) {
+//     const audioPlayer = document.getElementById('audio-player');
+
+//     // Check if the audio player exists
+//     if (!audioPlayer) {
+//         console.error("Audio player element not found.");
+//         return;
+//     }
+
+//     // Set the audio source if it's not already set to the desired URL
+//     if (audioPlayer.src !== url) {
+//         audioPlayer.src = url; // Assign the new audio URL
+//         isPlaying = false;     // Reset the playing state since the source changed
+//     }
+
+//     // Toggle play/pause based on the current state
+//     if (isPlaying) {
+//         audioPlayer.pause();
+//         isPlaying = false;
+//     } else {
+//         audioPlayer.play()
+//             .then(() => {
+//                 isPlaying = true;
+//                 console.log("Audio playback started.");
+//                 visualizeAudio(audioPlayer); // Call your existing visualizeAudio function
+//             })
+//             .catch(error => {
+//                 console.error("Error playing audio:", error);
+//                 alert("Unable to play audio. Please try again.");
+//             });
+//     }
+// }
+
 function visualizeAudio(audioElement) {
-    // Resume AudioContext if needed
     if (audioContext.state === 'suspended') {
         audioContext.resume();
     }
 
-    // Only create the MediaElementSourceNode once
     if (!audioSourceNode) {
         audioSourceNode = audioContext.createMediaElementSource(audioElement);
         const analyser = audioContext.createAnalyser();
@@ -111,46 +290,166 @@ function visualizeAudio(audioElement) {
         analyser.fftSize = 64;
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
+
         const canvas = document.getElementById('audio-visualizer');
         const canvasCtx = canvas.getContext('2d');
 
-        // Ensure canvas size matches button
-        canvas.width = canvas.offsetWidth * .8;
+        canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
 
         function draw() {
             requestAnimationFrame(draw);
 
-            // Only draw the bars if audio is playing
-            if (!isPlaying) return;
+            if (!audioElement.paused) {
+                analyser.getByteFrequencyData(dataArray);
 
-            analyser.getByteFrequencyData(dataArray);
+                canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
-            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+                // Draw the audio bars
+                const barWidth = (canvas.width / bufferLength) * 1.5;
+                let x = 0;
 
-            const barWidth = (canvas.width / bufferLength) * 1.5;
-            let x = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * canvas.height / 2;
+                    canvasCtx.fillStyle = `rgba(0, 150, 255, 0.8)`;
+                    canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
 
-            for (let i = 0; i < bufferLength; i++) {
-                let barHeight = (dataArray[i] / 255) * (canvas.height / 2);  // Scale bar height relative to canvas height
-                
-                canvasCtx.fillStyle = `rgba(255, 255, 255, 1)`;
-                canvasCtx.fillRect(x, canvas.height / 2 - barHeight / 2, barWidth, barHeight / 2);
-                canvasCtx.fillRect(x, canvas.height / 2, barWidth, barHeight / 2);
+                // Draw the playhead as a ball
+                const currentTime = audioElement.currentTime;
+                const duration = audioElement.duration;
 
-                x += barWidth + 1;
+                if (!isNaN(duration)) {
+                    const playheadX = (currentTime / duration) * canvas.width;
+                    const ballRadius = 4;
+
+                    canvasCtx.beginPath();
+                    canvasCtx.arc(
+                        playheadX, 
+                        34, // Position the ball near the bottom
+                        ballRadius, 
+                        0, 
+                        Math.PI * 2
+                    );
+                    canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Subtle blue color
+                    canvasCtx.shadowColor = 'rgba(255, 255, 255, 0.2)';
+                    canvasCtx.shadowBlur = 14;
+                    canvasCtx.fill();
+                }
             }
         }
+
         draw();
     }
 }
+
+// // THIS ONE WORKS GREAT BUT NO PLAYHEAD - THIS IS BACKUP IF PLAYHEAD ONE FUCKS UP
+// function visualizeAudio(audioElement) {
+//     if (audioContext.state === 'suspended') {
+//         audioContext.resume();
+//     }
+
+//     if (!audioSourceNode) {
+//         audioSourceNode = audioContext.createMediaElementSource(audioElement);
+//         const analyser = audioContext.createAnalyser();
+
+//         audioSourceNode.connect(analyser);
+//         analyser.connect(audioContext.destination);
+
+//         analyser.fftSize = 64;
+//         const bufferLength = analyser.frequencyBinCount;
+//         const dataArray = new Uint8Array(bufferLength);
+
+//         const canvas = document.getElementById('audio-visualizer');
+//         const canvasCtx = canvas.getContext('2d');
+
+//         canvas.width = canvas.offsetWidth;
+//         canvas.height = canvas.offsetHeight;
+
+//         function draw() {
+//             requestAnimationFrame(draw);
+
+//             if (!isPlaying) return;
+
+//             analyser.getByteFrequencyData(dataArray);
+
+//             canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+//             const barWidth = (canvas.width / bufferLength) * 1.5;
+//             let x = 0;
+
+//             for (let i = 0; i < bufferLength; i++) {
+//                 const barHeight = (dataArray[i] / 255) * canvas.height / 2;
+//                 canvasCtx.fillStyle = `rgba(0, 150, 255, 0.8)`;
+//                 canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+//                 x += barWidth + 1;
+//             }
+//         }
+
+//         draw();
+//     }
+// }
+
+// function visualizeAudio(audioElement) {
+//     // Resume AudioContext if needed
+//     if (audioContext.state === 'suspended') {
+//         audioContext.resume();
+//     }
+
+//     // Only create the MediaElementSourceNode once
+//     if (!audioSourceNode) {
+//         audioSourceNode = audioContext.createMediaElementSource(audioElement);
+//         const analyser = audioContext.createAnalyser();
+
+//         audioSourceNode.connect(analyser);
+//         analyser.connect(audioContext.destination);
+
+//         analyser.fftSize = 64;
+//         const bufferLength = analyser.frequencyBinCount;
+//         const dataArray = new Uint8Array(bufferLength);
+//         const canvas = document.getElementById('audio-visualizer');
+//         const canvasCtx = canvas.getContext('2d');
+
+//         // Ensure canvas size matches button
+//         canvas.width = canvas.offsetWidth * .8;
+//         canvas.height = canvas.offsetHeight;
+
+//         function draw() {
+//             requestAnimationFrame(draw);
+
+//             // Only draw the bars if audio is playing
+//             if (!isPlaying) return;
+
+//             analyser.getByteFrequencyData(dataArray);
+
+//             canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+//             const barWidth = (canvas.width / bufferLength) * 1.5;
+//             let x = 0;
+
+//             for (let i = 0; i < bufferLength; i++) {
+//                 let barHeight = (dataArray[i] / 255) * (canvas.height / 2);  // Scale bar height relative to canvas height
+                
+//                 canvasCtx.fillStyle = `rgba(255, 255, 255, 1)`;
+//                 canvasCtx.fillRect(x, canvas.height / 2 - barHeight / 2, barWidth, barHeight / 2);
+//                 canvasCtx.fillRect(x, canvas.height / 2, barWidth, barHeight / 2);
+
+//                 x += barWidth + 1;
+//             }
+//         }
+//         draw();
+//     }
+// }
 
 function updateLink(elementId, url, classToRemove = null) {
     const linkElement = document.getElementById(elementId);
     if (linkElement) {
         linkElement.href = url;
-        if (classToRemove) {
-            linkElement.classList.remove(classToRemove);
+        linkElement.classList.remove('inactive-link');
+        const img = linkElement.querySelector('img');
+        if (img) {
+            img.style.opacity = url ? 1 : 0.5; // Dim the icon if the link is inactive
         }
     } else {
         console.warn(`Element with ID '${elementId}' not found.`);
@@ -182,15 +481,15 @@ function checkIfDataComplete() {
 function fetchRelatedArticles() {
     // getJwtToken((token) => {
 
-        const tags = document.getElementById('tags').value;
-        logOutput("tags: " + tags);
+        const tags = document.getElementById('tags').value.split(',').map(tag => tag.trim());
+        logOutput("matching by tags...");
         if (!tags) {
-            logOutput("No tags found, cannot fetch related articles.");
+            logOutput("No tags!");
             return;
         }
 
         // API endpoint with tags
-        const apiEndpoint = `${backendURL}/api/records?resolveDepth=2&tags=${encodeURIComponent(tags)}`;
+        const apiEndpoint = `${backendURL}/api/records?resolveDepth=4&hasAudio=true&tags=${encodeURIComponent(tags)}`;
 
         // Fetch related articles from the API
         fetch(apiEndpoint, {
@@ -204,41 +503,124 @@ function fetchRelatedArticles() {
                 relatedContainer.innerHTML = ""; // Clear previous content
 
                 // Log the received data for debugging
-                console.log("Related articles fetched:", data);
+                // console.log("Related articles fetched:", data);
 
                 // Check if any articles were returned
                 if (data.searchResults > 0) {
-                    logOutput(`${data.records.searchResults} related articles found`);
+                    logOutput(`found ${data.searchResults} related articles`);
 
                     data.records.forEach((record, index) => {
-                        const article = record.data[0];
+                        console.log("related article:", record);
+                        const article = record;
+                        // const articleAlt = record.data[1];
+                        const relatedScore = record.score;
+                        // const tags = article.basic.tags.join(', ') || articleAlt.basic.tags.join(', ') || null;
+                        function findTagItems(obj) {
+                            let tagItems = [];
+
+                            function searchForTags(node) {
+                                if (Array.isArray(node)) {
+                                    node.forEach(item => searchForTags(item));
+                                } else if (node && typeof node === 'object') {
+                                    if (node.tagItems) {
+                                        tagItems = tagItems.concat(node.tagItems);
+                                    }
+                                    Object.values(node).forEach(value => searchForTags(value));
+                                }
+                            }
+
+                            searchForTags(obj);
+                            return tagItems;
+                        }
+
+                        const tags = findTagItems(record);
+                        // console.log("Found tags:", tags);
                         articleDidTx = record.oip.didTx;
-                        console.log("related article:", article);
+                        // console.log("related article:", article);
                         const articleTxId = articleDidTx.replace('did:arweave:', '');
+                        let summaryTTS
+                        // try{
+                        summaryTTS = (record !== undefined && article.data.post !== undefined && article.data.post.audioItems !== undefined) 
+                            ? article.data.post.audioItems[0].data.audio.webUrl 
+                            : null;
+
+                        // if (summaryTTS === null) {
+                        //     summaryTTS = (article !== undefined && article.audioItems !== undefined) 
+                        //         ? article.audioItems.data.audio.webUrl 
+                        //         : null;
+                        // }
+
+                        // if (summaryTTS === null) {
+                        //     summaryTTS = (articleAlt !== undefined && articleAlt.post !== undefined && articleAlt.post.audioItems !== undefined && articleAlt.post.audioItems[0].data[0].associatedURLOnWeb !== undefined) 
+                        //         ? articleAlt.post.audioItems[0].data[0].associatedURLOnWeb.url 
+                        //         : null;
+                        // }
+
+                        // if (summaryTTS === null) {
+                        //     summaryTTS = (articleAlt !== undefined && articleAlt.post !== undefined && articleAlt.post.audioItems !== undefined && articleAlt.post.audioItems[0].data[0].audio !== undefined) 
+                        //         ? articleAlt.post.audioItems[0].data[0].audio.webUrl 
+                        //         : null;
+                        // }
+
+                        // if (summaryTTS === null) {
+                        //     summaryTTS = (articleAlt !== undefined && articleAlt.audioItems !== undefined) 
+                        //         ? articleAlt.audioItems[0].data[0].audio.webUrl 
+                        //         : null;
+                        // }
+
+                        // if (summaryTTS === null) {
+                        //     summaryTTS = (articleAlt !== undefined && articleAlt.audioItems !== undefined && articleAlt.audioItems[0].data[0].associatedURLOnWeb !== undefined) 
+                        //         ? articleAlt.audioItems[0].data[0].associatedURLOnWeb.url 
+                        //         : null;
+                        // }
+
+                        if (summaryTTS === null) {
+                            console.error("No TTS URL found for related article.");
+                            return;
+                        }
+                        // } catch (error) {
+                        //     console.error("Error fetching related articles:", error);
+                        //     // alert("Failed to fetch related articles.");
+                        // }
                         const metadataUrl = `https://api.oip.onl/api/records?resolveDepth=2&didTx=${articleDidTx}`;
                         const blockchainUrl = `https://viewblock.io/arweave/tx/${articleTxId}`;
                         // const articleUrl = article.urlItems[0].data[0].associatedUrlOnWeb.url || article.urlItems[0].data[0].associatedURLOnWeb.url
                         const articleElement = document.createElement('div');
-                        const articleUrl = article.basic?.urlItems?.[0]?.data?.[0]?.associatedUrlOnWeb?.url || 
-                            article.basic?.urlItems?.[0]?.data?.[0]?.associatedURLOnWeb?.url ||
-                            article.urlItems?.[0]?.data?.[0]?.associatedUrlOnWeb?.url ||
-                            article.urlItems?.[0]?.data?.[0]?.associatedURLOnWeb?.url ||        // Fallback to `article.urlItems`
-                            null; // Default to null if no URL exists
+                        // const articleDidTx = record.oip.didTx;
+                        const articleUrl = article.data.post.webUrl || null; // Default to null if no URL exists
                         articleElement.classList.add('related-article');
 
                         articleElement.innerHTML = `
                             <input type="checkbox" class="related-checkbox" id="article-${index}" data-url="${articleUrl}">
                             <div class="related-content">
                                 <label for="article-${index}">
-                                    <h4>${article.basic.name}</h4>
-                                    <p>${article.basic.description}</p>
-                                    <small>Published on: ${new Date(article.basic.date * 1000).toDateString()}</small>
+                                    <h4>${article.data.basic.name}</h4>
+                                    <p>${article.data.basic.description}</p>
+                                        <div>
+                                            <small>Published on: ${new Date(article.data.basic.date * 1000).toDateString()}</small>
+                                                <div class="links">
+                                                    ${summaryTTS ? `
+                                                    <button class="play-audio-btn" data-audio="${summaryTTS}" title="Play Audio">
+                                                    <img src="svgs/noun-play-6302389.svg" alt="Play" style="width: 16px; height: 16px;">
+                                                    </button>
+                                                    ` : ""}
+                                                    <a id="read-article-${index}" href="${articleUrl}" target="_blank">
+                                                    <img src="svgs/noun-read-7196061.svg" alt="Read Article" style="width: 16px; height: 16px;" title="Read Article">
+                                                    </a>
+                                                    <a id="view-record-${index}" href="${metadataUrl}" target="_blank">
+                                                    <img src="svgs/noun-bookmark-7196067.svg" alt="View Record" style="width: 16px; height: 16px;" title="View Record">
+                                                    </a>
+                                                    <a id="permaweb-data-${index}" href="${blockchainUrl}" target="_blank">
+                                                    <img src="svgs/noun-verified-badge-7196252.svg" alt="Permaweb Data" style="width: 16px; height: 16px;" title="Permaweb Data">
+                                                    </a>
+                                                </div>
+                                                <div class="tags-container" style="display: none;">
+                                                    <span class="tags">${tags}</span>
+                                                    <div class="relatedScore">${relatedScore}</div>
+                                                </div>
+                                        </div>
+                                        <input type="text" id="didTx-${index}" class="didTx" value="${articleDidTx}">
                                 </label>
-                                <div class="links">
-                                    <a id="read-article-${index}" href="${articleUrl}" target="_blank">Read Article</a> |
-                                    <a id="view-record-${index}" href="${metadataUrl}" target="_blank">View Record</a> |
-                                    <a id="permaweb-data-${index}" href="${blockchainUrl}" target="_blank">Permaweb Data</a>
-                                </div>
                             </div>
                         `;
                         relatedContainer.appendChild(articleElement);
@@ -249,18 +631,25 @@ function fetchRelatedArticles() {
                         updateLink(`permaweb-data-${index}`, blockchainUrl);
                     });
                 } else {
-                    logOutput("No related articles found.");
+                    logOutput("Found 0 related articles.");
                     relatedContainer.innerHTML = "<p>No related articles found.</p>";
                 }
             })
             .catch(error => {
                 logOutput("Error fetching related articles.");
                 console.error("Error fetching related articles:", error);
-                alert("Failed to fetch related articles.");
+                // alert("Failed to fetch related articles.");
             });
     // });
 }
 
+document.addEventListener("click", (event) => {
+    if (event.target.closest(".play-audio-btn")) {
+        const playButton = event.target.closest(".play-audio-btn");
+        const audioUrl = playButton.getAttribute("data-audio");
+        playPauseAudio(audioUrl, playButton);
+    }
+});
 // Show or hide the loading indicator and backdrop
 function showLoadingIndicator(show) {
     show = false
@@ -293,7 +682,17 @@ function summarizeSelectedSavedArticles() {
     }
 
     // Send the selected articles for summarization
-    port.postMessage({ action: 'summarizeArticles', articles: selectedArticles });
+    // Send message to background to create summary for selected articles
+    try {
+        console.log('sending articles to podcast');
+        port.postMessage({ action: 'podcastArticles', articles: selectedArticles });
+    } catch (error) {
+        reconnectPort();
+        // console.error("Port disconnected. Reconnecting...");
+        // port = reconnectPort(); // Reopen the port
+        // port.postMessage({ action: 'podcastArticles', articles: selectedArticles });
+    }
+    // port.postMessage({ action: 'summarizeArticles', articles: selectedArticles });
 }
 
 function saveSelectedArticles() {
@@ -341,7 +740,7 @@ function displaySavedArticles() {
 
                 savedArticles.forEach((article, index) => {
                     const articleElement = document.createElement('div');
-                    articleElement.classList.add('related-article');
+                    articleElement.classList.add('saved-article');
                     const articleTxId = article.didTx.replace('did:arweave:', ''); // Remove the "did:arweave:" prefix
                     const metadataUrl = `https://api.oip.onl/api/records?resolveDepth=2&didTx=${article.didTx}`;
                     const blockchainUrl = `https://viewblock.io/arweave/tx/${articleTxId}`;
@@ -500,83 +899,83 @@ function summarizeSelectedArticles() {
 // LISTENERS
 // Event listener for messages from the background script
 port.onMessage.addListener((message) => {
+    console.log('Received message:', message.action, message.data);
     if (message.data && message.data.type === 'error') {
         console.log("error: ", JSON.stringify(message.data.payload));
         setGeneratingState(false);
     } else if (message.data && message.data.type === 'ping') {
-        console.log("ping: ",JSON.stringify(message.data.payload));
+        // console.log("ping: ", JSON.stringify(message.data.payload));
     } else {
         if (message.action === 'updateData') {
-            console.log('Received data for:', message.data.type, JSON.stringify(message.data.payload));
+            // console.log('Received data for:', message.data.type, JSON.stringify(message.data.payload));
             // Handle the message and update UI
             if (message.data.type === 'initialData') {
+                if (message.data.payload.screenshotURL) {
+                    console.log('1 setting screenshot URL')
+                    document.getElementById('screenshot').src = message.data.payload.screenshotURL;
+                }
                 if (message.data.payload.title) {
                     document.getElementById('headline').value = message.data.payload.title;
-                    logOutput("headline found");
+                    logOutput("found headline");
                 }
                 if (message.data.payload.byline) {
                     document.getElementById('byline').value = message.data.payload.byline;
-                    logOutput("byline found");
+                    logOutput("found byline");
                 }
                 if (message.data.payload.description) {
-                    // document.getElementById('description').value = message.data.payload.description;
-                    logOutput("description found");
+                    logOutput("found description");
                 }
                 if (message.data.payload.content) {
                     document.getElementById('content').value = message.data.payload.content;
-                    logOutput("content found");
+                    logOutput("found content");
                 }
                 if (message.data.payload.url) {
                     document.getElementById('url').value = message.data.payload.url;
                     let readArticleUrl = message.data.payload.url;
                     document.getElementById('read-article-link').href = readArticleUrl;
-                    logOutput("url found");
+                    logOutput("found url");
                 }
                 if (message.data.payload.domain) {
                     document.getElementById('domain').value = message.data.payload.domain;
-                    logOutput("domain found");
+                    logOutput("found domain");
                 }
                 if (message.data.payload.publishDate) {
                     const unixTimestamp = message.data.payload.publishDate;
                     const date = new Date(unixTimestamp * 1000);
                     const humanReadableDate = date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
                     document.getElementById('publish-date').value = humanReadableDate;
-                    logOutput("publish date found");
+                    logOutput("found publish date");
                 }
                 if (message.data.payload.tags) {
                     document.getElementById('tags').value = message.data.payload.tags.join(', ');
-                    logOutput("tags found");
+                    logOutput("found tags");
                 }
             }
             if (message.data.type === 'byline') {
                 document.getElementById('byline').value = message.data.payload.byline;
-                logOutput("byline found");
+                logOutput("found byline");
             }
             if (message.data.type === 'publishDate') {
                 const unixTimestamp = message.data.payload.publishDate;
                 const date = new Date(unixTimestamp * 1000); // Convert Unix timestamp to milliseconds
                 const humanReadableDate = date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
                 document.getElementById('publish-date').value = humanReadableDate;
-                logOutput("publish date found");
+                logOutput("found publish date");
 
             }
             if (message.data.type === 'content') {
-                logOutput("content found");
-
-                // document.getElementById('content').value = message.data.payload.content;
+                logOutput("found content");
             }
 
             if (message.data.type === 'tags') {
                 document.getElementById('tags').value = message.data.payload.tags.join(', ');
-                logOutput("tags inferred");
-
+                logOutput("inferred tags");
             }
             if (message.data.type === 'summary') {
-                // document.getElementById('description').value = message.data.payload.description;
-                logOutput("summary generated");
+                logOutput("generated summary");
             }
             if (message.data.type === 'archived') {
-                logOutput('Article archived');
+                logOutput('archived article 4ever');
                 console.log('article archived message', message.data);
                 let articleDidTx = message.data.payload.archived;
                 console.log('received message that article was archived', articleDidTx);
@@ -589,75 +988,37 @@ port.onMessage.addListener((message) => {
                 // Update the blockchain link
                 const blockchainUrl = `https://arweave.net/${articleTxId}`;
                 updateLink('blockchain-link', blockchainUrl);
-                
-                // // Ensure the metadata container exists
-                // const metadataContainer = document.getElementById('metadata-container');
-                // if (metadataContainer) {
-                //     // Check if the metadata link already exists
-                //     if (!metadataContainer.querySelector(`a[href*="${articleDidTx}"]`)) {
-                //         const metadataUrl = `https://api.oip.onl/api/records?resolveDepth=2&didTx=${articleDidTx}`;
-                //         const metadataLink = document.createElement('a');
-                //         metadataLink.href = metadataUrl;
-                //         metadataLink.target = '_blank'; // Opens in a new tab
-                //         metadataLink.textContent = 'View Record';
-                //         metadataContainer.appendChild(metadataLink);
-                //     } else {
-                //         console.log('Metadata link already exists.');
-                //     }
-                // } else {
-                //     console.error('Metadata container not found in the DOM.');
-                // }
-
-                // // Ensure the blockchain container exists
-                // const blockchainContainer = document.getElementById('blockchain-container');
-                // if (blockchainContainer) {
-                //     // Check if the blockchain link already exists
-                //     if (!blockchainContainer.querySelector(`a[href*="${articleTxId}"]`)) {
-                //         const blockchainUrl = `https://arweave.net/${articleTxId}`;
-                //         const blockchainLink = document.createElement('a');
-                //         blockchainLink.href = blockchainUrl;
-                //         blockchainLink.target = '_blank'; // Opens in a new tab
-                //         blockchainLink.textContent = 'Permaweb Data';
-                //         blockchainContainer.appendChild(blockchainLink);
-                //     } else {
-                //         console.log('Blockchain link already exists.');
-                //     }
-                // } else {
-                //     console.error('Blockchain container not found in the DOM.');
-                // }
-
             }
             if (message.data.type === 'finalData') {
-                logOutput("metadata found: finalData");
+                console.log('finalData has been received:', message.data.payload);
+                logOutput("got metadata");
                 document.getElementById('byline').value = message.data.payload.byline;
                 document.getElementById('headline').value = message.data.payload.title;
-                // const descriptionField = document.getElementById('description');
-                // showLoadingIndicator(false);  // Make sure to hide the loading spinner when final data is received
-                // const markdownContent = message.data.payload.description;
-    
-                // // Convert markdown to HTML using Marked.js
-                // const htmlContent = marked(markdownContent);
-    
-                // // Set the innerHTML of the description field to the converted markdown
-                // descriptionField.innerHTML = htmlContent;
-                // document.getElementById('description').value = message.data.payload.description;
-                document.getElementById('content').value = message.data.payload.content;
+                document.getElementById('description').value = message.data.payload.description;
                 document.getElementById('url').value = message.data.payload.url;
                 let readArticleUrl = message.data.payload.url;
-                // document.getElementById('read-article-link').href = readArticleUrl;
-                // document.getElementById('read-article-link').classList.remove('inactive-link');
-                logOutput("metadata found: url" + JSON.stringify(message.data.payload.url));
                 document.getElementById('domain').value = message.data.payload.domain;
-                logOutput("metadata found: domain" + JSON.stringify(message.data.payload.domain));
                 const unixTimestamp = message.data.payload.publishDate;
                 const date = new Date(unixTimestamp * 1000); // Convert Unix timestamp to milliseconds
                 const humanReadableDate = date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+                logOutput("making date readable");
                 document.getElementById('publish-date').value = humanReadableDate;
                 document.getElementById('tags').value = message.data.payload.tags.join(', ');
-                // Use the generic function to update links
                 updateLink('read-article-link', message.data.payload.url, 'inactive-link');
-                // updateLink('permaweb-link', message.data.payload.permawebData, 'inactive-link'); // Example for another link
                 setGeneratingState(false);
+
+                const audioPlayer = document.getElementById('audio-player');
+                articleSummaryAudioUrl = `${backendURL}${message.data.payload.summaryTTS}`;
+
+                if (audioPlayer) {
+                    audioPlayer.src = articleSummaryAudioUrl;  // Set the URL of the audio file
+                    audioPlayer.type = 'audio/mp3'; // Explicitly set the Content-Type for mp3 audio
+                    audioPlayer.load(); // Ensure the audio is loaded
+
+                    audioPlayer.style.display = 'block';  // Show the audio player if it's hidden
+                    visualizeAudio(audioPlayer);
+                }
+
                 briefBtn.style.display = 'block';  // Show the button once all data is ready
                 saveButton.style.display = 'block';  // Show the button once all data is ready
                 briefBtn.style.opacity = '1';  // Make the button fully opaque
@@ -666,36 +1027,28 @@ port.onMessage.addListener((message) => {
                 saveButton.style.pointerEvents = 'auto';  // Enable pointer events to allow clicks
             }
             if (message.data.type === 'dataFromIndex') {
-                logOutput("record found in index");
+                logOutput("found in archive");
                 document.getElementById('headline').value = message.data.payload.title;
                 document.getElementById('byline').value = message.data.payload.byline;
                 const unixTimestamp = message.data.payload.publishDate;
                 const date = new Date(unixTimestamp * 1000); // Convert Unix timestamp to milliseconds
                 const humanReadableDate = date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
                 document.getElementById('publish-date').value = humanReadableDate;
-                document.getElementById('content').value = message.data.payload.description;
+                document.getElementById('description').value = message.data.payload.description;
                 document.getElementById('tags').value = message.data.payload.tags.join(', ');
                 document.getElementById('url').value = message.data.payload.url;
-                // Set the URL for the "Read Article" link
                 let readArticleUrl = message.data.payload.url;
-                logOutput("metadata found in index");
                 document.getElementById('domain').value = message.data.payload.domain;
-                logOutput("domain found" + JSON.stringify(message.data.payload.domain));
-                // Format as Day, Month Date, Year
                 const recordStatus = message.data.payload.recordStatus;
                 const summaryTTS = message.data.payload.summaryTTS; // The URL of the audio file
+                console.log('111 summaryTTS:', summaryTTS);
                 articleTxId = message.data.payload.txId;
                 articleDidTx = message.data.payload.didTx;
-                // Set the URL for the "Metadata" link
+                screenshotUrl = message.data.payload.screenshotURL;
+                console.log('2 setting screenshotUrl:', screenshotUrl);
+                document.getElementById('screenshot').src = message.data.payload.screenshotURL;
                 const metadataUrl = `https://api.oip.onl/api/records?resolveDepth=2&didTx=${articleDidTx}`;
-                
-                // document.getElementById('read-article-link').href = readArticleUrl;
-                // document.getElementById('read-article-link').classList.remove('inactive-link');
-                // document.getElementById('metadata-link').href = metadataUrl;
-                // document.getElementById('metadata-link').classList.remove('inactive-link');
-                
                 const blockchainLink = document.createElement('a');
-                // Set the URL for the "Blockchain" link
                 if (recordStatus === "pending confirmation in Arweave") {
                     blockchainLink.href = `https://arweave.net/${articleTxId}`;
                 } else {
@@ -705,52 +1058,80 @@ port.onMessage.addListener((message) => {
                 updateLink('read-article-link', readArticleUrl, 'inactive-link');
                 updateLink('metadata-link', metadataUrl, 'inactive-link');
                 updateLink('blockchain-link', blockchainLink.href, 'inactive-link');
-                // updateLink('permaweb-link', message.data.payload.permawebData, 'inactive-link'); // Example for another link
-                // blockchainLink.target = '_blank'; // Opens in a new tab
-                // blockchainLink.textContent = 'Permaweb Data';
-                // document.getElementById('blockchain-container').appendChild(blockchainLink);
-                // document.getElementById('blockchain-link').classList.remove('inactive-link');
                 articleSummaryAudioUrl = summaryTTS;
                 console.log('receiving speech ', summaryTTS)
-                // briefBtn.disabled = false; // Enable Brief Me button
                 briefBtn.style.opacity = '1';
                 briefBtn.style.pointerEvents = 'auto';  // Enable pointer events to allow clicks
-                // Save the audio URL to localStorage for later use
-                // localStorage.setItem('articleSummaryAudioUrl', apiEndpoint);  
                 const audioPlayer = document.getElementById('audio-player');
 
                 if (audioPlayer) {
                     audioPlayer.src = summaryTTS;  // Set the URL of the audio file
-                    // audioPlayer.type = 'audio/wav'; // Explicitly set the Content-Type for wav audio
                     audioPlayer.type = 'audio/mp3'; // Explicitly set the Content-Type for mp3 audio
                     audioPlayer.load(); // Ensure the audio is loaded
 
                     audioPlayer.style.display = 'block';  // Show the audio player if it's hidden
                     visualizeAudio(audioPlayer);
-
                 }
-                
+
                 setGeneratingState(false);
                 briefBtn.style.display = 'block';  // Show the button once all data is ready
                 saveButton.style.display = 'block';  // Show the button once all data is ready
-    
+
                 briefBtn.style.opacity = '1';  // Make the button fully opaque
                 saveButton.style.opacity = '1';  // Make the button fully opaque
-    
+
                 briefBtn.style.pointerEvents = 'auto';  // Enable pointer events to allow clicks
                 saveButton.style.pointerEvents = 'auto';  // Enable pointer events to allow clicks
             }
+            if (message.data.type === 'podcastProductionUpdate') {
+                console.log('Podcast production update:', message.data.payload);
+                logOutput(message.data.payload);
+            }
+            if (message.data.type === 'podcastComplete') {
+                console.log('Received podcastComplete audio URL:', message.data.payload.podcastFile);
+                setGeneratingState(false);
+                console.log('Podcast complete:', parsedData);
+                if (!popupPort) {
+                    chrome.windows.create({
+                    url: chrome.runtime.getURL('popup.html'),
+                    type: 'popup',
+                    width: 400,
+                    height: 600
+                    });
+                }
+                if (isRelatedTabActive === true) {
+                    relatedSummaryAudioUrl = `${backendURL}/api/media?id=${message.data.payload.podcastFile}`;
+                    console.log('Received combined summary audio URL:', relatedSummaryAudioUrl);
+                } else if (isSavedTabActive === true) {
+                    savedSummaryAudioUrl = `${backendURL}/api/media?id=${message.data.payload.podcastFile}`;
+                    console.log('Received combined summary audio URL:', savedSummaryAudioUrl);
+                } else {
+                    articleSummaryAudioUrl = `${backendURL}${message.payload.url}`;
+                }
+    
+                logOutput("Podcast generated!");
+    
+                briefBtn.disabled = false;
+                briefBtn.style.opacity = '1';
+                briefBtn.style.pointerEvents = 'auto';  // Enable pointer events to allow clicks
+                // isAudioPlaying = false; // Reset audio playback state
+            }
+            
         }
+        
+        // if (message.action === 'podcastGeneration') {
+        //     const host = message.data.payload
+        //     console.log('podcastGeneration:', host);
+        //     logOutput("generating intro for" + host);
+        // }
         if (message.action === 'synthesizedSpeech') {
             const audioUrl = message.payload; // The URL of the audio file
             const apiEndpoint = `${backendURL}${audioUrl}`;
             console.log('receiving speech ', apiEndpoint)
-            logOutput('received speech');
+            logOutput('summary synthesized');
             articleSummaryAudioUrl = apiEndpoint;
             briefBtn.style.opacity = '1';
             briefBtn.style.pointerEvents = 'auto';  // Enable pointer events to allow clicks
-            // Save the audio URL to localStorage for later use
-            // localStorage.setItem('articleSummaryAudioUrl', apiEndpoint);  
             if (audioPlayer) {
                 audioPlayer.src = apiEndpoint;  // Set the URL of the audio file
                 audioPlayer.style.display = 'block';  // Show the audio player if it's hidden
@@ -760,39 +1141,11 @@ port.onMessage.addListener((message) => {
         if (message.action === 'updateSummary') {
             console.log("Summary received:", message.summary, ". Not doing anything with it currently");
         }
-        if (message.action === 'combinedSummaryAudio') {
-            console.log('Received combined summary audio URL:', message.payload.url);
-            setGeneratingState(false);
-            if (isRelatedTabActive === true) {
-                relatedSummaryAudioUrl = `${backendURL}${message.payload.url}`;
-                console.log('Received combined summary audio URL:', relatedSummaryAudioUrl);
-            } else if (isSavedTabActive === true) {
-                savedSummaryAudioUrl = `${backendURL}${message.payload.url}`;
-                console.log('Received combined summary audio URL:', savedSummaryAudioUrl);
-            } else {
-                articleSummaryAudioUrl = `${backendURL}${message.payload.url}`;
-            }
+        // if (message.action === 'combinedSummaryAudio') {
 
-            logOutput("Podcast generated!");
-
-
-            briefBtn.disabled = false;
-
-            // briefBtn.disabled = false; // Enable Brief Me button for playback
-            briefBtn.style.opacity = '1';
-            briefBtn.style.pointerEvents = 'auto';  // Enable pointer events to allow clicks
-            // saveButton = document.getElementById('save-article-btn');
-            // saveButton.style.opacity = '1';  // Make the button look inactive initially
-            // saveButton.style.pointerEvents = 'auto';  // Disable pointer events to prevent clicks
-
-            isAudioPlaying = false; // Reset audio playback state
-            // localStorage.setItem('relatedSummaryAudioUrl', relatedSummaryAudioUrl);  // Store URL for later use
-
-
-        }
         if (message.action === 'addArticleResult') {
             if (message.success) {
-                logOutput('Article saved successfully!');
+                logOutput('Saved article locally');
             } else if (message.error === 'Key already exists') {
                 logOutput('Article already saved.');
                 alert(`Article "${message.data.title}" is already saved.`);
@@ -803,8 +1156,56 @@ port.onMessage.addListener((message) => {
             }
         }
     }
-})
+});
 
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("Popup loaded. Resetting icon to default...");
+
+    // Reset the browser action icon to the default state
+    // resetIcon();
+    // Retrieve the preloaded data
+    chrome.storage.local.get(['popupData'], function (result) {
+        const data = result.popupData;
+
+        if (data) {
+            // Populate fields with the retrieved data
+            console.log("Populating popup with data:", data);
+            document.getElementById('byline').value = data.byline;
+            document.getElementById('headline').value = data.title;
+            document.getElementById('content').value = data.content;
+            document.getElementById('url').value = data.url;
+            document.getElementById('domain').value = data.domain;
+
+            const unixTimestamp = data.publishDate;
+            const date = new Date(unixTimestamp * 1000); // Convert Unix timestamp to milliseconds
+            const humanReadableDate = date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+            document.getElementById('publish-date').value = humanReadableDate;
+
+            document.getElementById('tags').value = data.tags.join(', ');
+
+            // Update links using the helper function
+            updateLink('read-article-link', data.url, 'inactive-link');
+            // Optionally update other links if needed
+            // updateLink('permaweb-link', data.permawebData, 'inactive-link');
+
+            // Enable UI elements once data is ready
+            setGeneratingState(false);
+            const briefBtn = document.getElementById('brief-btn');
+            const saveButton = document.getElementById('save-btn');
+            if (briefBtn && saveButton) {
+                briefBtn.style.display = 'block';
+                saveButton.style.display = 'block';
+                briefBtn.style.opacity = '1';
+                saveButton.style.opacity = '1';
+                briefBtn.style.pointerEvents = 'auto';
+                saveButton.style.pointerEvents = 'auto';
+            }
+        } else {
+            console.error("No data available to populate the popup.");
+        }
+    });
+});
 
 window.addEventListener('load', function() {
     // Check for the JWT token in Chrome's local storage
@@ -868,6 +1269,148 @@ let retryCount = 0;
 const maxRetries = 5;
 
 // Function to start fetch operation in the background script
+function displayError(errorMessage, url) {
+    // Hide all other content and show error message
+    document.body.innerHTML = `
+        <div style="padding: 20px; text-align: center;">
+            <h2 style="color: #dc3545;">Error</h2>
+            <p>${errorMessage}</p>
+            ${url ? `<p><strong>URL:</strong> ${url}</p>` : ''}
+            <button onclick="window.close()" style="margin-top: 10px; padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Close
+            </button>
+        </div>
+    `;
+}
+
+function displaySuccess(message, transactionId) {
+    // Add success message to the top of the popup
+    const successDiv = document.createElement('div');
+    successDiv.style.cssText = 'background: #d4edda; color: #155724; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #c3e6cb;';
+    successDiv.innerHTML = `
+        <strong>✅ ${message}</strong><br>
+        ${transactionId ? `<small>Transaction ID: ${transactionId}</small>` : ''}
+    `;
+    document.body.insertBefore(successDiv, document.body.firstChild);
+}
+
+function displayLogin() {
+    // Show login form
+    document.body.innerHTML = `
+        <div style="padding: 20px;">
+            <h2 style="text-align: center; margin-bottom: 20px;">Scribes of Alexandria</h2>
+            <h3 style="text-align: center; margin-bottom: 20px;">Login Required</h3>
+            
+            <div id="login-form">
+                <div style="margin-bottom: 15px;">
+                    <label for="email" style="display: block; margin-bottom: 5px;">Email:</label>
+                    <input type="email" id="email" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" required>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="password" style="display: block; margin-bottom: 5px;">Password:</label>
+                    <input type="password" id="password" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" required>
+                </div>
+                
+                <button id="login-btn" style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 10px;">
+                    Login
+                </button>
+                
+                <button id="register-btn" style="width: 100%; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Register New Account
+                </button>
+                
+                <div id="login-message" style="margin-top: 10px; text-align: center; color: #dc3545;"></div>
+            </div>
+        </div>
+    `;
+    
+    // Add event listeners
+    document.getElementById('login-btn').addEventListener('click', handleLogin);
+    document.getElementById('register-btn').addEventListener('click', handleRegister);
+    
+    // Handle Enter key
+    document.getElementById('password').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin();
+        }
+    });
+}
+
+async function handleLogin() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const messageEl = document.getElementById('login-message');
+    
+    if (!email || !password) {
+        messageEl.textContent = 'Please enter both email and password';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${backendURL}/api/user/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.token) {
+            // Save token and close popup
+            chrome.storage.local.set({ token: result.token }, () => {
+                messageEl.style.color = '#28a745';
+                messageEl.textContent = 'Login successful! You can now click the extension icon to archive articles.';
+                setTimeout(() => window.close(), 2000);
+            });
+        } else {
+            messageEl.textContent = result.error || 'Login failed';
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        messageEl.textContent = 'Login failed. Please check your connection and try again.';
+    }
+}
+
+async function handleRegister() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const messageEl = document.getElementById('login-message');
+    
+    if (!email || !password) {
+        messageEl.textContent = 'Please enter both email and password';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${backendURL}/api/user/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email, 
+                password, 
+                name: email.split('@')[0] // Use email prefix as name
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.token) {
+            // Save token and close popup
+            chrome.storage.local.set({ token: result.token }, () => {
+                messageEl.style.color = '#28a745';
+                messageEl.textContent = 'Registration successful! You can now click the extension icon to archive articles.';
+                setTimeout(() => window.close(), 2000);
+            });
+        } else {
+            messageEl.textContent = result.error || 'Registration failed';
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        messageEl.textContent = 'Registration failed. Please check your connection and try again.';
+    }
+}
+
 function initiateBackgroundFetch() {
     const timeoutDuration = 60000; // Start fetch after 1 minute if not yet started
 
@@ -913,176 +1456,6 @@ function initiateBackgroundFetch() {
 }
 
 
-// Retry mechanism: Attempt the fetch up to `maxRetries` times
-function startFetchWithRetries(pageUrl, activeTab, timeoutId, htmlContent = null) {
-    if (retryCount < maxRetries) {
-        // Send message to the background script to start the fetch operation
-        port.postMessage({
-            action: "startFetch",
-            url: pageUrl,
-            html: htmlContent
-        });
-
-        // Increment the retry count
-        retryCount++;
-    } else {
-        // After 5 retries, show failure message and disable buttons
-        console.error("Failed to fetch content after 5 attempts.");
-
-        // Disable Save and Brief Me buttons
-        saveButton.style.opacity = '0.5';
-        saveButton.style.pointerEvents = 'none';
-        briefBtn.style.opacity = '0.5';
-        briefBtn.style.pointerEvents = 'none';
-
-        // Show an alert message
-        alert("Failed to fetch the article after multiple attempts.");
-
-        // Create and display a Retry Fetch button
-        displayRetryFetchButton();
-    }
-}
-
-// Add a "Retry Fetch" button if all retries fail
-function displayRetryFetchButton() {
-    let retryButton = document.getElementById("retry-fetch-btn");
-    if (!retryButton) {
-        retryButton = document.createElement("button");
-        retryButton.id = "retry-fetch-btn";
-        retryButton.textContent = "Retry Fetch";
-        retryButton.style.display = "block";
-
-        document.querySelector(".sticky-button-row").appendChild(retryButton);
-
-        retryButton.addEventListener("click", () => {
-            retryCount = 0;  // Reset retry count
-            initiateBackgroundFetch();  // Restart fetch
-            chrome.tabs.reload();  // Reload the active tab if supported by the extension
-        });
-    }
-}
-
-// Event listener for the initial load process
-// window.addEventListener('load', function() {
-//     chrome.storage.local.get('token', function(data) {
-//         const token = data.token;
-
-//         if (!token) {
-//             // No JWT found, show the login/register screen
-//             document.getElementById('auth-container').classList.remove('hidden');
-//             document.getElementById('main-content').classList.add('hidden');
-
-//             // Simulate a JWT for development purposes
-//             // const fakeToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGVtYWlsLmNvbSIsImlhdCI6MTYxNjIzOTAyMn0.7';
-//             // chrome.storage.local.set({ token: fakeToken }, function() {
-//             //     console.log('Fake JWT token set for development');
-//             //     logOutput('Fake JWT token set for development');
-//             // });
-
-//             // Simulate as if the user is logged in
-//             // document.getElementById('auth-container').classList.add('hidden');
-//             // document.getElementById('main-content').classList.remove('hidden');
-//             // document.getElementById('logout-btn').classList.remove('hidden');
-//         } else {
-//             // JWT found, show the main content
-//             document.getElementById('auth-container').classList.add('hidden');
-//             document.getElementById('main-content').classList.remove('hidden');
-//             document.getElementById('logout-btn').classList.remove('hidden');  // Show logout button
-//         }
-//     });
-// });
-
-// // Wait for the entire page to load and then send a message to the backend scrape endpoint and to the content script
-// window.addEventListener('load', function () {
-//     const tabLinks = document.querySelectorAll('.tablinks');
-//     tabLinks.forEach(tab => {
-//         tab.addEventListener('click', function (event) {
-//             const tabName = event.target.innerText;
-//             openTab(event, tabName);
-//         });
-//     });
-
-//     // Set default tab open
-//     // document.getElementById('defaultOpen').click();
-//     document.querySelector('.tablinks').click();
-//     document.querySelector('.tablinks:nth-child(1)').click();  // Article tab by default
-
-//     // Set up event listeners for tabs (as per CSP requirements)
-//       document.querySelector('.tablinks:nth-child(1)').addEventListener('click', (event) => {
-//         openTab(event, 'Article')
-//         isRelatedTabActive = false ;
-//         isSavedTabActive = false ;
-//         // localStorage.setItem(isRelatedTabActive, false)
-//     });
-//       document.querySelector('.tablinks:nth-child(2)').addEventListener('click', (event) => {
-//         openTab(event, 'Related');
-//         isRelatedTabActive = true ;
-//         isSavedTabActive = false ;
-//         // localStorage.setItem(isRelatedTabActive, true)
-//     });
-//       document.querySelector('.tablinks:nth-child(3)').addEventListener('click', (event) => {
-//         logOutput('Saved tab clicked');
-//         openTab(event, 'Saved');
-//         displaySavedArticles();
-//         saveButton.style.opacity = '0.5';  // Disable save button
-//         saveButton.style.pointerEvents = 'none';
-//       isRelatedTabActive = false ;
-//         isSavedTabActive = true ;
-//     });
-//     //   document.querySelector('.tablinks:nth-child(4)').addEventListener('click', (event) => openTab(event, 'Settings'));
-  
-//     // Get the active tab's URL and start fetching data
-//     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-//         const activeTab = tabs[0];
-//         const pageUrl = activeTab.url;
-//         chrome.scripting.executeScript({
-//         target: { tabId: activeTab.id },
-//         func: () => {
-//             return new Promise((resolve) => {
-//                 const checkReadyState = () => {
-//                     if (document.readyState === 'complete') {
-//                         resolve(document.documentElement.outerHTML);
-//                     } else {
-//                         document.addEventListener('readystatechange', () => {
-//                             if (document.readyState === 'complete') {
-//                                 resolve(document.documentElement.outerHTML);
-//                             }
-//                         });
-//                     }
-//                 };
-//                 checkReadyState();
-//             });
-//         },
-//     }, (result) => {
-//         const htmlContent = (result && result.length > 0) ? result[0].result : result;
-        
-//         // Show loading indicator
-        
-//         // TURN THIS BACK ON AFTER FIXING LOADING INDICATOR
-//         // showLoadingIndicator(true);
-
-//         port.postMessage({ action: "startFetch", url: pageUrl, html: htmlContent });
-//         // });      
-
-        
-
-//         // Send message to content script to extract data
-//         chrome.tabs.sendMessage(activeTab.id, { action: 'extractData', additionalParam: htmlContent }, function(response) {
-//             if (response && response.data) {
-//             logOutput('found metadata:' + JSON.stringify(response.data));
-//             }
-//             const articleData = (response) ? response.data : null;
-//             if (articleData) {
-//                 document.getElementById('byline').value = articleData.byline || "Unknown author";
-//                 document.getElementById('headline').value = articleData.title || "No title found";
-//                 document.getElementById('description').value = articleData.description || "No description found";
-//                 document.getElementById('content').value = articleData.content || "No content found";
-//                 document.getElementById('url').value = articleData.url;
-//             }
-//         });  
-//         });
-//     });
-// });
 
 // Registration process
 document.getElementById('register-btn').addEventListener('click', function() {
@@ -1195,13 +1568,75 @@ document.getElementById('settings-btn').addEventListener('click', function() {
 
 // Save settings and hide the settings tab when the save button is clicked
 document.getElementById('save-settings-btn').addEventListener('click', function() {
-    const settingsTab = document.getElementById('Settings');
+    const host1 = document.getElementById('host1').value;
+    const host2 = document.getElementById('host2').value;
+    // const order = 'host1'
+
+    // Validate the host selection
+    if (!host1 || !host2 || host1 === host2) {
+        const errorMsg = "Hosts must be different and selected.";
+        document.getElementById('host-error').textContent = errorMsg;
+        return;
+    }
+
+    // Save the settings to local storage
+    chrome.storage.local.set({ personalitySettings: { host1, host2 } }, () => {
+        alert("Settings saved successfully!");
+    });
+
     // Hide the settings tab
+    const settingsTab = document.getElementById('Settings');
     settingsTab.classList.add('hidden');
     // Show the main content and other tabs
     document.querySelector('.tab').classList.remove('hidden');
     document.getElementById('main-content').classList.remove('hidden');
+    document.querySelector('.sticky-button-row').style.display = 'flex';
 });
+
+// Load saved settings when the popup is opened
+document.addEventListener('DOMContentLoaded', function() {
+    chrome.storage.local.get('personalitySettings', function(data) {
+        if (data.personalitySettings) {
+            const { host1, host2 } = data.personalitySettings;
+
+            document.getElementById('host1').value = host1;
+            document.getElementById('host2').value = host2;
+
+            // if (order === 'host1') {
+            //     document.getElementById('order1').checked = true;
+            // } else if (order === 'host2') {
+            //     document.getElementById('order2').checked = true;
+            // }
+        }
+    });
+});
+
+
+// Toggle settings visibility using the gear button
+// document.getElementById('settings-btn').addEventListener('click', function() {
+//     const settingsTab = document.getElementById('Settings');
+//     const stickyButtonRow = document.querySelector('.sticky-button-row');
+
+//     if (settingsTab.classList.contains('hidden')) {
+//         settingsTab.classList.remove('hidden');
+//         // Hide other tabs/content when settings is open
+//         document.querySelector('.tab').classList.add('hidden');
+//         document.getElementById('main-content').classList.add('hidden');
+//         // Hide the sticky button row
+//         stickyButtonRow.style.display = 'none';
+//     } else {
+//         settingsTab.classList.add('hidden');
+//         // Show other tabs/content when settings is hidden
+//         document.querySelector('.tab').classList.remove('hidden');
+//         document.getElementById('main-content').classList.remove('hidden');
+//         // Show the sticky button row
+//         stickyButtonRow.style.display = 'flex'; // Adjust to your original display style (e.g., 'flex')
+//     }
+// });
+
+
+
+
 
 // Logout process
 document.getElementById('logout-btn').addEventListener('click', function() {
@@ -1228,21 +1663,31 @@ summarizeSelectedBtn.addEventListener('click', function () {
     if (isRelatedTabActive) {
         document.querySelectorAll('.related-checkbox:checked').forEach(checkbox => {
             const articleContent = checkbox.nextElementSibling;
+            console.log('1488 articleContent:', articleContent);
             selectedArticles.push({
-                url: checkbox.getAttribute('data-url'),
+                didTx: articleContent.querySelector('.didTx').value,
                 title: articleContent.querySelector('h4').innerText,
-                description: articleContent.querySelector('p').innerText // fix this once we have content
+                content: articleContent.querySelector('p').innerText,
+                date: articleContent.querySelector('small').innerText,
+                tags: articleContent.querySelector('.tags')?.innerText || 'No tags',
+                relatedScore: articleContent.querySelector('.relatedScore').innerText,
+                url: articleContent.querySelector('a').href,
             });
+            console.log('1496 selectedArticles:', selectedArticles);
         });
     } else if (isSavedTabActive) {
         document.querySelectorAll('.saved-checkbox:checked').forEach(checkbox => {
             const articleContent = checkbox.nextElementSibling;
+            console.log('1501 articleContent:', articleContent);
             selectedArticles.push({
-                // didTx: checkbox.getAttribute('data-didtx'),
-                url: checkbox.getAttribute('data-url'),
+                didTx: articleContent.querySelector('.didTx').value,
                 title: articleContent.querySelector('h4').innerText,
-                description: articleContent.querySelector('p').innerText // fix this once we have content
+                content: articleContent.querySelector('p').innerText,
+                date: articleContent.querySelector('small').innerText,
+                tags: articleContent.querySelector('.tags')?.innerText || 'No tags',
+                url: checkbox.getAttribute('data-url'),
             });
+            console.log('1510 selectedArticles:', selectedArticles);
         });
     } 
 
@@ -1254,10 +1699,13 @@ summarizeSelectedBtn.addEventListener('click', function () {
 
     // Send message to background to create summary for selected articles
     // port.postMessage({ action: 'summarizeArticles', articles: selectedArticles });
+    if (!port) {
+        port = reconnectPort(); // Automatically reopen the port if it's closed
+    }
     port.postMessage({ action: 'podcastArticles', articles: selectedArticles });
 });
 
-// Save the article to Dexie when the button is clicked
+// Save the article to  when the button is clicked
 saveButton.addEventListener('click', async function () {
     chrome.storage.local.get('userId', async function (data) {
         const userId = data.userId || 'anon';  // Default if not found
@@ -1314,6 +1762,13 @@ document.getElementById('toggle-content-btn').addEventListener('click', function
     }
 });
 
+document.querySelectorAll('.sticky-button-row button, .links a').forEach(button => {
+    button.addEventListener('click', () => {
+        button.classList.add('active');
+        setTimeout(() => button.classList.remove('active'), 150); // Remove active effect after 150ms
+    });
+});
+
 document.getElementById('brief-btn').addEventListener('click', function () {
     // isRelatedTabActive = localStorage.getItem(isRelatedTabActive)
     console.log('isRelatedTabActive: ', isRelatedTabActive);
@@ -1323,12 +1778,12 @@ document.getElementById('brief-btn').addEventListener('click', function () {
     } else if (isRelatedTabActive) {
      audioUrl = relatedSummaryAudioUrl
     } else {
-        audioUrl = articleSummaryAudioUrl
+     audioUrl = articleSummaryAudioUrl
     }
     console.log('audioUrl: ', audioUrl);
-    logOutput('audioUrl: ' + audioUrl);
+    logOutput('playing audio');
     if (audioUrl) {
-        playPauseAudio(audioUrl);
+        playPauseAudio(audioUrl, 'brief-btn');
     } else {
         alert(isRelatedTabActive 
             ? "Please generate a related articles summary first."
@@ -1340,6 +1795,178 @@ document.getElementById('account-btn').addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('account.html') });
 });
 
+
+
+// // Retry mechanism: Attempt the fetch up to `maxRetries` times
+// function startFetchWithRetries(pageUrl, activeTab, timeoutId, htmlContent = null) {
+//     if (retryCount < maxRetries) {
+//         // Send message to the background script to start the fetch operation
+//         port.postMessage({
+//             action: "startFetch",
+//             url: pageUrl,
+//             html: htmlContent
+//         });
+
+//         // Increment the retry count
+//         retryCount++;
+//     } else {
+//         // After 5 retries, show failure message and disable buttons
+//         console.error("Failed to fetch content after 5 attempts.");
+
+//         // Disable Save and Brief Me buttons
+//         saveButton.style.opacity = '0.5';
+//         saveButton.style.pointerEvents = 'none';
+//         briefBtn.style.opacity = '0.5';
+//         briefBtn.style.pointerEvents = 'none';
+
+//         // Show an alert message
+//         alert("Failed to fetch the article after multiple attempts.");
+
+//         // Create and display a Retry Fetch button
+//         displayRetryFetchButton();
+//     }
+// }
+
+// // Add a "Retry Fetch" button if all retries fail
+// function displayRetryFetchButton() {
+//     let retryButton = document.getElementById("retry-fetch-btn");
+//     if (!retryButton) {
+//         retryButton = document.createElement("button");
+//         retryButton.id = "retry-fetch-btn";
+//         retryButton.textContent = "Retry Fetch";
+//         retryButton.style.display = "block";
+
+//         document.querySelector(".sticky-button-row").appendChild(retryButton);
+
+//         retryButton.addEventListener("click", () => {
+//             retryCount = 0;  // Reset retry count
+//             initiateBackgroundFetch();  // Restart fetch
+//             chrome.tabs.reload();  // Reload the active tab if supported by the extension
+//         });
+//     }
+// }
+
+// // Event listener for the initial load process
+// // window.addEventListener('load', function() {
+// //     chrome.storage.local.get('token', function(data) {
+// //         const token = data.token;
+
+// //         if (!token) {
+// //             // No JWT found, show the login/register screen
+// //             document.getElementById('auth-container').classList.remove('hidden');
+// //             document.getElementById('main-content').classList.add('hidden');
+
+// //             // Simulate a JWT for development purposes
+// //             // const fakeToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGVtYWlsLmNvbSIsImlhdCI6MTYxNjIzOTAyMn0.7';
+// //             // chrome.storage.local.set({ token: fakeToken }, function() {
+// //             //     console.log('Fake JWT token set for development');
+// //             //     logOutput('Fake JWT token set for development');
+// //             // });
+
+// //             // Simulate as if the user is logged in
+// //             // document.getElementById('auth-container').classList.add('hidden');
+// //             // document.getElementById('main-content').classList.remove('hidden');
+// //             // document.getElementById('logout-btn').classList.remove('hidden');
+// //         } else {
+// //             // JWT found, show the main content
+// //             document.getElementById('auth-container').classList.add('hidden');
+// //             document.getElementById('main-content').classList.remove('hidden');
+// //             document.getElementById('logout-btn').classList.remove('hidden');  // Show logout button
+// //         }
+// //     });
+// // });
+
+// // // Wait for the entire page to load and then send a message to the backend scrape endpoint and to the content script
+// // window.addEventListener('load', function () {
+// //     const tabLinks = document.querySelectorAll('.tablinks');
+// //     tabLinks.forEach(tab => {
+// //         tab.addEventListener('click', function (event) {
+// //             const tabName = event.target.innerText;
+// //             openTab(event, tabName);
+// //         });
+// //     });
+
+// //     // Set default tab open
+// //     // document.getElementById('defaultOpen').click();
+// //     document.querySelector('.tablinks').click();
+// //     document.querySelector('.tablinks:nth-child(1)').click();  // Article tab by default
+
+// //     // Set up event listeners for tabs (as per CSP requirements)
+// //       document.querySelector('.tablinks:nth-child(1)').addEventListener('click', (event) => {
+// //         openTab(event, 'Article')
+// //         isRelatedTabActive = false ;
+// //         isSavedTabActive = false ;
+// //         // localStorage.setItem(isRelatedTabActive, false)
+// //     });
+// //       document.querySelector('.tablinks:nth-child(2)').addEventListener('click', (event) => {
+// //         openTab(event, 'Related');
+// //         isRelatedTabActive = true ;
+// //         isSavedTabActive = false ;
+// //         // localStorage.setItem(isRelatedTabActive, true)
+// //     });
+// //       document.querySelector('.tablinks:nth-child(3)').addEventListener('click', (event) => {
+// //         logOutput('Saved tab clicked');
+// //         openTab(event, 'Saved');
+// //         displaySavedArticles();
+// //         saveButton.style.opacity = '0.5';  // Disable save button
+// //         saveButton.style.pointerEvents = 'none';
+// //       isRelatedTabActive = false ;
+// //         isSavedTabActive = true ;
+// //     });
+// //     //   document.querySelector('.tablinks:nth-child(4)').addEventListener('click', (event) => openTab(event, 'Settings'));
+  
+// //     // Get the active tab's URL and start fetching data
+// //     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+// //         const activeTab = tabs[0];
+// //         const pageUrl = activeTab.url;
+// //         chrome.scripting.executeScript({
+// //         target: { tabId: activeTab.id },
+// //         func: () => {
+// //             return new Promise((resolve) => {
+// //                 const checkReadyState = () => {
+// //                     if (document.readyState === 'complete') {
+// //                         resolve(document.documentElement.outerHTML);
+// //                     } else {
+// //                         document.addEventListener('readystatechange', () => {
+// //                             if (document.readyState === 'complete') {
+// //                                 resolve(document.documentElement.outerHTML);
+// //                             }
+// //                         });
+// //                     }
+// //                 };
+// //                 checkReadyState();
+// //             });
+// //         },
+// //     }, (result) => {
+// //         const htmlContent = (result && result.length > 0) ? result[0].result : result;
+        
+// //         // Show loading indicator
+        
+// //         // TURN THIS BACK ON AFTER FIXING LOADING INDICATOR
+// //         // showLoadingIndicator(true);
+
+// //         port.postMessage({ action: "startFetch", url: pageUrl, html: htmlContent });
+// //         // });      
+
+        
+
+// //         // Send message to content script to extract data
+// //         chrome.tabs.sendMessage(activeTab.id, { action: 'extractData', additionalParam: htmlContent }, function(response) {
+// //             if (response && response.data) {
+// //             logOutput('found metadata:' + JSON.stringify(response.data));
+// //             }
+// //             const articleData = (response) ? response.data : null;
+// //             if (articleData) {
+// //                 document.getElementById('byline').value = articleData.byline || "Unknown author";
+// //                 document.getElementById('headline').value = articleData.title || "No title found";
+// //                 document.getElementById('description').value = articleData.description || "No description found";
+// //                 document.getElementById('content').value = articleData.content || "No content found";
+// //                 document.getElementById('url').value = articleData.url;
+// //             }
+// //         });  
+// //         });
+// //     });
+// // });
 
 
 

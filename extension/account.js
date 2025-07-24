@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-backendURL = 'https://api.oip.onl';
+const backendURL = 'https://api.oip.onl';
 // Fetch account details from backend
 function fetchAccountDetails(token) {
     fetch(`${backendURL}/api/user`, {
